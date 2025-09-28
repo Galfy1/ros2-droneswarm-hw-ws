@@ -68,6 +68,8 @@ rm -rf temp_micro_agent
 # TODO
 # DER ER NOGET MED DE DEPENDENCIES DER.
 # 	DE INSTALLER IKKE-EXEC DEPENDENCIES I DOCKER, OG SÅ EXEC PÅ PIEN (SKAL VI DET SAMME)
+# TROR MÅSKE KUN VI BEHØVER UILD DEPENDECIES NÅR VI BYGGER?! ja :D
+# fiks det og skrive en kommentar i dockerfilen med at vi kun behøver build dependencies når vi bygger, og exec dependencies når vi kører på pi'en.
 
 
 # Optionally install dependencies on the target.
@@ -98,6 +100,10 @@ if [ "$install_dependencies" = "yes" ]; then
             apt update && \
             rosdep update && \
             rosdep install --from-paths install --dependency-types exec"
+    fi
+    if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "no" ]]; then
+        echo "Error, you need to build either the application or the micro-ROS agent to install dependencies."
+        exit 1
     fi
 else
     echo "Dependencies will NOT be installed on the target device."

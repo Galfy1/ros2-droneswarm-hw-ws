@@ -1,7 +1,7 @@
 FROM arm64v8/ros:humble
 
-ARG BUILD_MICRO_ROS_AGENT = "true"
-ARG BUILD_OUR_ROS2_WS = "true"
+ARG BUILD_MICRO_ROS_AGENT="yes"
+ARG BUILD_OUR_ROS2_WS="yes"
 
 # THIS FILE IS BASED ON: https://ardupilot.org/dev/docs/ros2-pi.html#cross-compile-an-application-with-docker 
 
@@ -26,10 +26,12 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 # RUN . /opt/ros/humble/setup.sh && colcon build     
 
 
+# Note: for commands within RUN, we need \ for each line (except the last), else docker will think its the end of RUN
+
 WORKDIR /
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
-    if [ "$BUILD_MICRO_ROS_AGENT" = "true" ]; then 
+    if [ "$BUILD_MICRO_ROS_AGENT" = "yes" ]; then \
         git clone --depth 1 --branch humble https://github.com/micro-ROS/micro-ROS-Agent.git && \
         cd micro-ROS-Agent && \
         apt-get update && \
@@ -39,9 +41,9 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
         # install fastcdr needed for micro-ROS-Agent:
         apt-get -y --no-install-recommends install ros-humble-fastcdr && \
         # source underlay and build micro-ROS-Agent
-        . /opt/ros/humble/setup.sh && colcon build;
-    else 
-        echo "Skipping micro-ROS-Agent";
+        . /opt/ros/humble/setup.sh && colcon build; \
+    else \
+        echo "Skipping micro-ROS-Agent"; \
     fi
 
 
@@ -57,13 +59,17 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 
 
 WORKDIR /
+# copy the whole workspace into the container:
 COPY . /our_ros2_ws
 WORKDIR /our_ros2_ws
-RUN if [ "$BUILD_OUR_ROS2_WS" = "true" ]; then 
+# (we dont need to --mount cache stuff here, because we dont use apt-get inside this RUN command)
+RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
         rosdep update && \
-        rosdep install -i --from-path src --rosdistro humble -y && \
-        . /opt/ros/humble/setup.sh && colcon build;
-    else
-        echo "Skipping our ROS2 workspace";
+        # install dependencies for our workspace - in they way we normally do for a ROS2 workspace EXCEPT:
+            # we we only need build dependencies (we can specify with --dependency-types) - exec dependencies are only needed and installed on the PI itself
+        rosdep install -i --from-path src --rosdistro humble -y --dependency-types build && \
+        . /opt/ros/humble/setup.sh && colcon build; \
+    else \
+        echo "Skipping our ROS2 workspace"; \
     fi
 
