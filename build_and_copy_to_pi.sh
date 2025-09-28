@@ -24,19 +24,21 @@ pi_username=$1
 install_dependencies=$2
 
 # Build with multiplatform support.
-docker build . --platform linux/arm64 -t micro_ros_agent
+docker build . --platform linux/arm64 -t build_image
 
 # Create a temporary directories to hold the installation files.
 rm -rf temp_micro_agent temp_our_ws  # Remove any existing temp directory to avoid conflicts.
 mkdir -p temp_micro_agent/install temp_our_ws/install  # Create the temp directory.
 
 # Copy the installation directory from the docker image to the host.
-docker create --name dummy micro_ros_agent
+docker create --name dummy build_image
 docker cp dummy:/micro-ROS-Agent/install temp_micro_agent/install
+docker cp dummy:/our_ros2_ws/install temp_our_ws/install
 docker rm -f dummy
 
 # And now, from host to target's home directory, but ignore COLCON_IGNORE.
 rsync -aRv --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@ubuntu.local:/home/$pi_username/microros_ws
+rsync -aRv --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@ubuntu.local:/home/$pi_username/our_ws
 
 # Clean up the temporary directories.
 rm -rf temp_micro_agent
