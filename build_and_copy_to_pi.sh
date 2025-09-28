@@ -35,6 +35,7 @@ install_dependencies=$4
 
 # Make sure any already existing container named "dummy" is removed before we start.
 docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
+                            # this will give an "ERROR: default sources list file already exists" error if the container does not exist - we can ignore that error!
 
 # Build with multiplatform support.
 docker build . --platform linux/arm64 -t build_image \
@@ -78,30 +79,33 @@ rm -rf temp_micro_agent
 # we only want to ssh once... thats why the if statements are a bit complex.
 if [ "$install_dependencies" = "yes" ]; then
     if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "no" ]]; then
-        ssh $pi_username@ubuntu.local "cd ~/our_ros2_ws && \
-            sudo rosdep init && \
-            apt update && \
-            rosdep update && \
-            rosdep install --from-paths install --dependency-types exec"
-    fi
-    if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "yes" ]]; then
-        ssh $pi_username@ubuntu.local "cd ~/microros_ws && \
-            sudo rosdep init && \
-            apt update && \
-            rosdep update && \
-            rosdep install --from-paths install --dependency-types exec"
-    fi
-    if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "yes" ]]; then
-        ssh $pi_username@ubuntu.local "cd ~/microros_ws && \
-            sudo rosdep init && \
-            apt update && \
+        ssh -t $pi_username@ubuntu.local "cd ~/our_ws && \
+            sudo rosdep init || true && \
+            sudo apt update && \
             rosdep update && \
             rosdep install --from-paths install --dependency-types exec && \
-            cd ~/our_ros2_ws && \
-            sudo rosdep init && \
-            apt update && \
+            exit"
+    fi
+    if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "yes" ]]; then
+        ssh -t $pi_username@ubuntu.local "cd ~/microros_ws && \
+            sudo rosdep init || true && \
+            sudo apt update && \
             rosdep update && \
-            rosdep install --from-paths install --dependency-types exec"
+            rosdep install --from-paths install --dependency-types exec && \
+            exit"
+    fi
+    if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "yes" ]]; then
+        ssh -t $pi_username@ubuntu.local "cd ~/microros_ws && \
+            sudo rosdep init || true && \
+            sudo apt update && \
+            rosdep update && \
+            rosdep install --from-paths install --dependency-types exec && \
+            cd ~/our_ws && \
+            sudo rosdep init || true && \
+            sudo apt update && \
+            rosdep update && \
+            rosdep install --from-paths install --dependency-types exec && \
+            exit"
     fi
     if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "no" ]]; then
         echo "Error, you need to build either the application or the micro-ROS agent to install dependencies."
