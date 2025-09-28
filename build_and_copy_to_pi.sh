@@ -9,20 +9,20 @@ set -e  # Stop the script if any command fails
 
 # Check for required arguments
 if [ -z "$1" ]; then
-    echo "Error: Missing first required argument <pi_username>"
+    echo "Error in first arg: Missing required argument <pi_username>"
     exit 1
 fi
-if [ -z "$2" ]; then
-    echo "Error: Missing fourth required argument <build_application> (values: yes or no)"
+if [[ -z "$2" || ( "$2" != "yes" && "$2" != "no" ) ]]; then
+    echo "Error in second arg: Missing argument or invalid value. <build_application> (values: yes or no)"
     exit 1
 fi
-if [ -z "$3" ]; then
-    echo "Error: Missing third required argument <build_micro_ros_agent> (values: yes or no)"
+if [[ -z "$3" || ( "$3" != "yes" && "$3" != "no" ) ]]; then
+    echo "Error in third arg: Missing argument or invalid value. <build_micro_ros_agent> (values: yes or no)"
     exit 1
 fi
 
-if [ -z "$4" ]; then
-    echo "Error: Missing second required argument <install_dependencies> (values: yes or no)"
+if [[ -z "$4" || ( "$4" != "yes" && "$4" != "no" ) ]]; then
+    echo "Error in fourth arg: Missing argument or invalid value. <install_dependencies> (values: yes or no)"
     exit 1
 fi
 
