@@ -33,6 +33,8 @@ build_application=$2
 build_micro_ros_agent=$3
 install_dependencies=$4
 
+# Make sure any already existing container named "dummy" is removed before we start.
+docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
 
 # Build with multiplatform support.
 docker build . --platform linux/arm64 -t build_image \
@@ -48,13 +50,13 @@ mkdir -p temp_our_ws/install temp_micro_agent/install  # Create the temp directo
 # Only copy to target if it was actually built.
 if [ "$build_application" = "yes" ]; then
     # Copy the installation directory from the docker image to the host.
-    docker cp dummy:/our_ros2_ws/install temp_our_ws/install
+    docker cp dummy:/our_ros2_ws/install/. temp_our_ws/install 
     # And now, from host to target's home directory, but ignore COLCON_IGNORE.
-    rsync -aRv --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@ubuntu.local:/home/$pi_username/our_ws
+    rsync -av --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@ubuntu.local:/home/$pi_username/our_ws
 fi
 if [ "$build_micro_ros_agent" = "yes" ]; then
-    docker cp dummy:/micro-ROS-Agent/install temp_micro_agent/install
-    rsync -aRv --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@ubuntu.local:/home/$pi_username/microros_ws
+    docker cp dummy:/micro-ROS-Agent/install/. temp_micro_agent/install
+    rsync -av --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@ubuntu.local:/home/$pi_username/microros_ws
 fi
 
 docker rm -f dummy
