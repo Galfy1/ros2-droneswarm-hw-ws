@@ -9,7 +9,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='py_playground',
+            package='droneswarm',
             namespace='drone',
             executable='testy_node',
             name='drone',

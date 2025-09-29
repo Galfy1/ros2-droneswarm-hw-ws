@@ -26,7 +26,6 @@ if [[ -z "$4" || ( "$4" != "yes" && "$4" != "no" ) ]]; then
     exit 1
 fi
 
-
 # Get the arguments
 pi_username=$1
 build_application=$2
@@ -65,14 +64,6 @@ docker rm -f dummy
 # Clean up the temporary directories.
 rm -rf temp_our_ws
 rm -rf temp_micro_agent
-
-
-
-# TODO
-# DER ER NOGET MED DE DEPENDENCIES DER.
-# 	DE INSTALLER IKKE-EXEC DEPENDENCIES I DOCKER, OG SÅ EXEC PÅ PIEN (SKAL VI DET SAMME)
-# TROR MÅSKE KUN VI BEHØVER UILD DEPENDECIES NÅR VI BYGGER?! ja :D
-# fiks det og skrive en kommentar i dockerfilen med at vi kun behøver build dependencies når vi bygger, og exec dependencies når vi kører på pi'en.
 
 
 # Optionally install dependencies on the target.
