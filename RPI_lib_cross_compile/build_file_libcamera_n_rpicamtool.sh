@@ -28,17 +28,14 @@ docker create --name dummy build_image
 rm -rf temp_libcamera
 mkdir -p temp_libcamera # Create the temp directory.
 
-# # Copy the installation directory from the docker image to the host. 
-# docker cp dummy/<PATH TO INSTALL FOLDER>. temp_libcamera/install 
+# Copy the installation directory from the docker image to the host (WSL). 
+# docker cp dummy/build temp_libcamera/install 
+docker cp dummy:/libcamera/build temp_libcamera/install
 
 # # And now, from host to target's home directory, but ignore COLCON_IGNORE.
 # rsync -av temp_libcamera/install $pi_username@ubuntu.local:/home/$pi_username/libcamera
 
-echo "Contents of / inside dummy container:"
-docker exec dummy pwd
-docker exec dummy ls -al /
-
 docker rm -f dummy
 
 # Clean up the temporary directories.
-rm -rf temp_libcamera
+# rm -rf temp_libcamera
