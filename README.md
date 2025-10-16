@@ -54,6 +54,8 @@ It is assumed that you are using a Linux machine.
 
 ## Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
+- If you get "exec /bin/sh: exec format error" while running the "cross compile" bash script, you Qemu might be broken - try installing it again using the command mentioned earlier in this readme file
+
 
 
 
