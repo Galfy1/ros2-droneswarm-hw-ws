@@ -3,6 +3,7 @@
 # Make this file executable with: chmod +x <script_name>.sh (just has to be done once)
 # Run this script with: ./<script_name>.sh
 
+# THIS SCRIPT COPIES THE DOCKERFILE AND DOCKER-COMPOSE.YML TO THE PI
 
 set -e  # Stop the script if any command fails
 
