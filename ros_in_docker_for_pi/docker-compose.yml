@@ -4,8 +4,13 @@ services:
     build: .
     privileged: true # just to make sure we dont get into permission issues
     volumes:
-      - ./workspaces # mount the directory where the build ros2 workspaces are stored
+      - ./:~/ # FOR STARUP SCRIPT - i.e. has to placed next to docker-compose.yml
+      - ./workspaces:~/workspaces # mount the directory where the build ros2 workspaces are stored  NOT SURE THIS IS NEEDED WHEN WE HAVE THE ABOVE
     devices:
       - "/dev/ttyS0"
     restart: always # always restart the container if it stops (i.e. also on reboot)
     network_mode: host
+    command: ["startup_script.sh"] # TODO ROS2 RUN/LANCH HER!  (bare brug shell form. seperated med && )
+
+                        # HUSK OGSÅ AT SOURCE!!! OVERLAY!!!
+                        

@@ -1,5 +1,6 @@
 # (this base image was used by the ardupilot guide... not sure whhy they dont use the official ros image - that has arm64v8 support as well)
 FROM arm64v8/ros:humble 
+#FROM ros:humble-ros-base
 
 ARG BUILD_MICRO_ROS_AGENT="yes"
 ARG BUILD_OUR_ROS2_WS="yes"
@@ -64,13 +65,18 @@ WORKDIR /
 COPY . /our_ros2_ws
 WORKDIR /our_ros2_ws
 # (we dont need to --mount cache stuff here, because we dont use apt-get inside this RUN command)
-RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
-        rosdep update && \
-        # install dependencies for our workspace - in they way we normally do for a ROS2 workspace EXCEPT:
-            # we we only need build dependencies (we can specify with --dependency-types) - exec dependencies are only needed and installed on the PI itself
-        rosdep install -i --from-path src --rosdistro humble -y --dependency-types build && \
-        . /opt/ros/humble/setup.sh && colcon build; \
-    else \
-        echo "Skipping our ROS2 workspace"; \
-    fi
+# RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
+#         rosdep update && \
+#         # install dependencies for our workspace - in they way we normally do for a ROS2 workspace EXCEPT:
+#             # we we only need build dependencies (we can specify with --dependency-types) - exec dependencies are only needed and installed on the PI itself
+#         rosdep install -i --from-path src --rosdistro humble -y --dependency-types build && \
+#         . /opt/ros/humble/setup.sh && colcon build; \
+#     else \
+#         echo "Skipping our ROS2 workspace"; \
+#     fi
+# DEBUGGING:
+RUN rosdep update
+RUN rosdep install -i --from-path src --rosdistro humble -y --dependency-types build
+RUN . /opt/ros/humble/setup.sh && colcon build
+# END DEBUGGING
 

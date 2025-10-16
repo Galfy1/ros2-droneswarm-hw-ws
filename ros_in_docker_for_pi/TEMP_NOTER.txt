@@ -34,3 +34,10 @@ https://docs.docker.com/compose/install/linux/#install-using-the-repository
 Skriv i guiden hvilket os og ting der er slået til i rpiimage, for at sætte os'et op.
 
 # HUSK .. vi har både micro agent og den anden der skal ros2 runnes.. de kan runnes i samme container!
+
+
+# build_and_copy_to_pi skal også restarte den docker container der er på pi'en (for at de nye filer træder i kraft)
+
+
+# HOV!!!!!! DEN DEPENECY INSTALL HALLØJ VI HAR NU INSTALLER PÅ PI HOST.. IKKE I dockerfilen
+    # AKA ALT DEPENDCIY HALLÆJ SKAL NOK FJERNES FRA DET SCRIPT. DET SKAL GØRES PÅ DOCKEREN AT RUNTIME (defineres i compose filen)
