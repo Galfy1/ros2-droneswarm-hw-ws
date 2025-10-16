@@ -1,4 +1,5 @@
-FROM arm64v8/ros:humble
+# (this base image was used by the ardupilot guide... not sure whhy they dont use the official ros image - that has arm64v8 support as well)
+FROM arm64v8/ros:humble 
 
 ARG BUILD_MICRO_ROS_AGENT="yes"
 ARG BUILD_OUR_ROS2_WS="yes"

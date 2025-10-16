@@ -1,0 +1,11 @@
+services:
+  # https://docs.docker.com/reference/compose-file/services/
+  ros2:
+    build: .
+    privileged: true # just to make sure we dont get into permission issues
+    volumes:
+      - ./workspaces # mount the directory where the build ros2 workspaces are stored
+    devices:
+      - "/dev/ttyS0"
+    restart: always # always restart the container if it stops (i.e. also on reboot)
+    network_mode: host

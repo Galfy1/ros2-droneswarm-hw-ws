@@ -8,29 +8,29 @@
 set -e  # Stop the script if any command fails 
 
 # Check for required arguments
-if [ -z "$1" ]; then
-    echo "Error in first arg: Missing required argument <pi_username>"
-    exit 1
-fi
-if [[ -z "$2" || ( "$2" != "yes" && "$2" != "no" ) ]]; then
+# if [ -z "$1" ]; then
+#     echo "Error in first arg: Missing required argument <pi_hostname> (e.g. raspberrypi.local)"
+#     exit 1
+# fi
+if [[ -z "$1" || ( "$1" != "yes" && "$1" != "no" ) ]]; then
     echo "Error in second arg: Missing argument or invalid value. <build_application> (values: yes or no)"
     exit 1
 fi
-if [[ -z "$3" || ( "$3" != "yes" && "$3" != "no" ) ]]; then
+if [[ -z "$2" || ( "$2" != "yes" && "$2" != "no" ) ]]; then
     echo "Error in third arg: Missing argument or invalid value. <build_micro_ros_agent> (values: yes or no)"
     exit 1
 fi
 
-if [[ -z "$4" || ( "$4" != "yes" && "$4" != "no" ) ]]; then
+if [[ -z "$3" || ( "$3" != "yes" && "$3" != "no" ) ]]; then
     echo "Error in fourth arg: Missing argument or invalid value. <install_dependencies> (values: yes or no)"
     exit 1
 fi
 
 # Get the arguments
-pi_username=$1
-build_application=$2
-build_micro_ros_agent=$3
-install_dependencies=$4
+pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
+build_application=$1
+build_micro_ros_agent=$2
+install_dependencies=$3
 
 # Make sure any already existing container named "dummy" is removed before we start.
 docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
@@ -52,11 +52,11 @@ if [ "$build_application" = "yes" ]; then
     # Copy the installation directory from the docker image to the host.
     docker cp dummy:/our_ros2_ws/install/. temp_our_ws/install 
     # And now, from host to target's home directory, but ignore COLCON_IGNORE.
-    rsync -av --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@ubuntu.local:/home/$pi_username/our_ws
+    rsync -av --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_hostname:/home/$pi_hostname/ros2_droneswarm/workspaces/our_ws
 fi
 if [ "$build_micro_ros_agent" = "yes" ]; then
     docker cp dummy:/micro-ROS-Agent/install/. temp_micro_agent/install
-    rsync -av --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@ubuntu.local:/home/$pi_username/microros_ws
+    rsync -av --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_hostname:/home/$pi_hostname/ros2_droneswarm/workspaces/microros_ws
 fi
 
 docker rm -f dummy
@@ -70,7 +70,7 @@ rm -rf temp_micro_agent
 # we only want to ssh once... thats why the if statements are a bit complex.
 if [ "$install_dependencies" = "yes" ]; then
     if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "no" ]]; then
-        ssh -t $pi_username@ubuntu.local "cd ~/our_ws && \
+        ssh -t $pi_hostname "cd ~/our_ws && \
             sudo rosdep init || true && \
             sudo apt update && \
             rosdep update && \
@@ -78,7 +78,7 @@ if [ "$install_dependencies" = "yes" ]; then
             exit"
     fi
     if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "yes" ]]; then
-        ssh -t $pi_username@ubuntu.local "cd ~/microros_ws && \
+        ssh -t $pi_hostname "cd ~/microros_ws && \
             sudo rosdep init || true && \
             sudo apt update && \
             rosdep update && \
@@ -86,7 +86,7 @@ if [ "$install_dependencies" = "yes" ]; then
             exit"
     fi
     if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "yes" ]]; then
-        ssh -t $pi_username@ubuntu.local "cd ~/microros_ws && \
+        ssh -t $pi_hostname "cd ~/microros_ws && \
             sudo rosdep init || true && \
             sudo apt update && \
             rosdep update && \
