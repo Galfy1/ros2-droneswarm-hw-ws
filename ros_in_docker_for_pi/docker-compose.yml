@@ -1,16 +1,21 @@
+# https://stackoverflow.com/questions/30063907/docker-compose-how-to-execute-multiple-commands 
 services:
   # https://docs.docker.com/reference/compose-file/services/
   ros2:
     build: .
     privileged: true # just to make sure we dont get into permission issues
     volumes:
-      - ./:~/ # FOR STARUP SCRIPT - i.e. has to placed next to docker-compose.yml
-      - ./workspaces:~/workspaces # mount the directory where the build ros2 workspaces are stored  NOT SURE THIS IS NEEDED WHEN WE HAVE THE ABOVE
+      - ./workspaces:~/ros2_droneswarm/workspaces # mount the directory where the build ros2 workspaces are stored  NOT SURE THIS IS NEEDED WHEN WE HAVE THE ABOVE
     devices:
       - "/dev/ttyS0"
     restart: always # always restart the container if it stops (i.e. also on reboot)
     network_mode: host
-    command: ["startup_script.sh"] # TODO ROS2 RUN/LANCH HER!  (bare brug shell form. seperated med && )
+    command: bash -c "
+             asd &&
+             asd2 &&
+             ...
+            "
+            # SOVS OG RUN/LAUNCH OVENFOR!
 
-                        # HUSK OGSÅ AT SOURCE!!! OVERLAY!!!
-                        
+# ingen "\" needed ved linjeskift i kommandoen!
+      

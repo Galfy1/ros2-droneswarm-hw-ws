@@ -10,12 +10,8 @@ set -e  # Stop the script if any command fails
 pi_hostname="raspberrypi.local"
 target_dir=~/ros2_droneswarm
 
-
-# We could build the docker on the pi
-
-# TODO: byg på pc og copy image over
-rsync -av --mkpath Dockerfile docker-compose.yml startup_script.sh $pi_hostname:$target_dir
+rsync -av --mkpath Dockerfile docker-compose.yml $pi_hostname:$target_dir
 
 
 
-# restart dockeren.
+# restart dockeren. (vi kan simpel exitte docker containeren, da den er sat til always restart i docker-compose filen)

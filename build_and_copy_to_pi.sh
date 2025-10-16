@@ -32,7 +32,7 @@ build_application=$1
 build_micro_ros_agent=$2
 # install_dependencies=$3
 
-# create varaibles
+# create variables
 pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
 our_ws_target_dir=~/ros2_droneswarm/workspaces/our_ws
 microros_ws_target_dir=~/ros2_droneswarm/workspaces/microros_ws
@@ -69,6 +69,10 @@ docker rm -f dummy
 # Clean up the temporary directories.
 rm -rf temp_our_ws
 rm -rf temp_micro_agent
+
+
+
+
 
 
 # # Optionally install dependencies on the target.
