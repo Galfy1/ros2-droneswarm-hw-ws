@@ -37,7 +37,8 @@ pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change
 ros2_container_base_dir=~/ros2_droneswarm
 our_ws_target_dir=$ros2_container_base_dir/workspaces/our_ws
 microros_ws_target_dir=$ros2_container_base_dir/workspaces/microros_ws
-ros2_container_name="ros2"
+ros2_container_name="ros2_droneswarm-ros2-1" # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
+main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
 
 # Make sure any already existing container named "dummy" is removed before we start.
 docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
@@ -72,27 +73,20 @@ docker rm -f dummy
 rm -rf temp_our_ws
 rm -rf temp_micro_agent
 
+# # The paths that the docker volumes are mapped to INSIDE THE DOCKER CONTAINER (defined in docker-compose.yml)
+# our_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/our_ws
+# microros_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/microros_ws
 
-ssh -t $pi_hostname " cd $ros2_container_base_dir && \
-                      docker compose down || true && \
-                      docker compose up -d " # -d to run in detached mode
-
-
-
-
-# The paths that the docker volumes are mapped to INSIDE THE DOCKER CONTAINER (defined in docker-compose.yml)
-our_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/our_ws
-microros_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/microros_ws
-
-# Re-run docker container to apply new build files (the container will run the command defined docker-compose.yml, that will run/launch to ros2 nodes from th new files)
-# Optionally install dependencies on the target.
+# Step 1: Re-run the container (down/up cus of compose) to make sure any previous ros2 nodes are stopped.
+# Step 2: (optional) Install dependencies inside the container.
+# Step 3: Run the micro-ROS agent and our application launch file inside the container
 # (https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/)
 ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
     cd $ros2_container_base_dir
-    docker compose down || true
-    docker compose up -d
+    sudo docker compose down || true
+    sudo docker compose up -d
     if [ "$install_dependencies" = "yes" ]; then
-        docker exec $ros2_container_name bash -c "
+        sudo docker exec $ros2_container_name bash -c "
             source /opt/ros/humble/setup.bash &&
             rosdep init || true &&
             apt update &&
@@ -100,20 +94,22 @@ ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on
             if [ "$build_micro_ros_agent" = "yes" ]; then
                 cd $microros_ws_target_dir_in_docker &&
                 rosdep install --from-paths install --dependency-types exec &&
-            fi &&
+            fi
             if [ "$build_application" = "yes" ]; then
                 cd $our_ws_target_dir_in_docker &&
-                rosdep install --from-paths install --dependency-types exec &&
+                rosdep install --from-paths install --dependency-types exec
             fi "
     else
         echo "Dependencies will NOT be installed on the target device."
     fi
+    sudo docker exec $ros2_container_name bash -c "
+        cd $microros_ws_target_dir_in_docker &&
+        source install/setup.bash &&
+        ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyS0
+        cd $our_ws_target_dir_in_docker &&
+        source install/setup.bash &&
+        ros2 launch $main_ros2_launchfile "
 EOF
-
-#!!!!!!!!!!!!!!  TODO ISSUE. når vi upper docker containeren ovenfor, så starter den nodesne... selvom vi måske ikke har installeret dependencies endnu.
-# potential løsning: ryk lat fra command in i den her fil og exec det manuelt herinde. så kan jeg gøre det efter dependencies er installeret.
-            # så behøver jeg måske ikke down/up den? men skal stadig up den ? right? men får jeg så error hvis den allerede kører?
-            # ISSIE MED DET... hvad så når pi restarter, vil den så stadig have ros2 nodesne kørenede? ja det tror jeg den vil! for containeren bare stoppe/startes, hvilket resurmer tidligere state
 
 
 
