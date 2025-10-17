@@ -34,8 +34,11 @@ build_micro_ros_agent=$2
 
 # create variables
 pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
-our_ws_target_dir=~/ros2_droneswarm/workspaces/our_ws
-microros_ws_target_dir=~/ros2_droneswarm/workspaces/microros_ws
+
+ros2_container_base_dir=~/ros2_droneswarm
+our_ws_target_dir=$ros2_container_base_dir/workspaces/our_ws
+microros_ws_target_dir=$ros2_container_base_dir/workspaces/microros_ws
+ros2_container_name="ros2"
 
 # Make sure any already existing container named "dummy" is removed before we start.
 docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
@@ -71,8 +74,44 @@ rm -rf temp_our_ws
 rm -rf temp_micro_agent
 
 
+ssh -t $pi_hostname " cd $ros2_container_base_dir && \
+                      docker compose down || true && \
+                      docker compose up -d " # -d to run in detached mode
 
 
+
+
+# The paths that the docker volumes are mapped to INSIDE THE DOCKER CONTAINER (defined in docker-compose.yml)
+our_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/our_ws
+microros_ws_target_dir_in_docker=~/ros2_droneswarm/workspaces/microros_ws
+
+# Re-run docker container to apply new build files (the container will run the command defined docker-compose.yml, that will run/launch to ros2 nodes from th new files)
+# Optionally install dependencies on the target.
+# (https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/)
+ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
+    cd $ros2_container_base_dir
+    docker compose down || true
+    docker compose up -d
+    if [ "$install_dependencies" = "yes" ]; then
+        docker exec $ros2_container_name bash -c "
+            source /opt/ros/humble/setup.bash &&
+            rosdep init || true &&
+            apt update &&
+            rosdep update &&
+            if [ "$build_micro_ros_agent" = "yes" ]; then
+                cd $microros_ws_target_dir_in_docker &&
+                rosdep install --from-paths install --dependency-types exec &&
+            fi &&
+            if [ "$build_application" = "yes" ]; then
+                cd $our_ws_target_dir_in_docker &&
+                rosdep install --from-paths install --dependency-types exec &&
+            fi "
+    else
+        echo "Dependencies will NOT be installed on the target device."
+    fi
+EOF
+
+#!!!!!!!!!!!!!!  TODO ISSUE. når vi upper docker containeren ovenfor, så starter den nodesne... selvom vi måske ikke har installeret dependencies endnu.
 
 
 # # Optionally install dependencies on the target.

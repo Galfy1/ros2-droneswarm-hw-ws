@@ -1,19 +1,13 @@
 
 
 # FIRST TIME RÆKKEFØLGE
-
-install_docker_on_pi.sh --> build_and_copy_to_pi.sh (restart_ros_docker: "no") --> install_dependencies_on_pi.sh --> copy_to_pi_and_run.sh
+install_docker_on_pi.sh --> copy_ros2_os_to_pi.sh --> build_copy_run_on_pi.sh --> install_dependencies_on_pi.sh 
 
 # EFTERFØLGENE (når man har nye ros source kode kan vil kører)
-build_and_copy_to_pi.sh (restart_ros_docker: "yes") --> (optional) install_dependencies_on_pi.sh 
+build_copy_run_on_pi.sh --> (optional) install_dependencies_on_pi.sh 
 
-# LAV EN ARG I build_and_copy_to_pi.sh OM MAN VIL RESTARTE ROS DOCKEREN! !!!
+NOTE: MÅSKE install_dependencies_on_pi.sh  kan smeltes ind i build_copy_run_on_pi nu!!! med et flag ligesom før
 
-
-
-
-
-(restarting the pi will automatically up the docker container and launch the ros2 nodes using the new build files)
 
 
 
