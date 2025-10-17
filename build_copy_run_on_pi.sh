@@ -111,6 +111,10 @@ ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on
 EOF
 
 #!!!!!!!!!!!!!!  TODO ISSUE. når vi upper docker containeren ovenfor, så starter den nodesne... selvom vi måske ikke har installeret dependencies endnu.
+# potential løsning: ryk lat fra command in i den her fil og exec det manuelt herinde. så kan jeg gøre det efter dependencies er installeret.
+            # så behøver jeg måske ikke down/up den? men skal stadig up den ? right? men får jeg så error hvis den allerede kører?
+            # ISSIE MED DET... hvad så når pi restarter, vil den så stadig have ros2 nodesne kørenede? ja det tror jeg den vil! for containeren bare stoppe/startes, hvilket resurmer tidligere state
+
 
 
 # # Optionally install dependencies on the target.
