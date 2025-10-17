@@ -20,17 +20,16 @@ if [[ -z "$2" || ( "$2" != "yes" && "$2" != "no" ) ]]; then
     echo "Error in third arg: Missing argument or invalid value. <build_micro_ros_agent> (values: yes or no)"
     exit 1
 fi
-
-# if [[ -z "$3" || ( "$3" != "yes" && "$3" != "no" ) ]]; then
-#     echo "Error in fourth arg: Missing argument or invalid value. <install_dependencies> (values: yes or no)"
-#     exit 1
-# fi
+if [[ -z "$3" || ( "$3" != "yes" && "$3" != "no" ) ]]; then
+    echo "Error in fourth arg: Missing argument or invalid value. <install_dependencies> (values: yes or no)"
+    exit 1
+fi
 
 # Get the arguments
 
 build_application=$1
 build_micro_ros_agent=$2
-# install_dependencies=$3
+install_dependencies=$3
 
 # create variables
 pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
