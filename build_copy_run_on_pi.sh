@@ -89,12 +89,12 @@ ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on
     if [ "$install_dependencies" = "yes" ]; then
         sudo docker exec $ros2_container_name bash -c "
             source /opt/ros/humble/setup.bash &&
-            rosdep init || true &&
             apt update &&
             rosdep update &&
             if [ "$build_micro_ros_agent" = "yes" ]; then
                 cd $microros_ws_target_dir_in_docker &&
-                rosdep install --from-paths install --dependency-types exec
+                rosdep install --from-paths install --dependency-types exec &&
+                apt install -y ros-humble-micro-ros-msgs
             fi
             if [ "$build_application" = "yes" ]; then
                 cd $our_ws_target_dir_in_docker &&
@@ -112,6 +112,14 @@ ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on
         ros2 launch $main_ros2_package_name $main_ros2_launchfile "
 EOF
 
+# Regarding the "ros-humble-micro-ros-msgs package in the above script:
+    # The package is a dependency for micro-ROS-Agent. It's listed as a dependency in micro-ROS-Agent's dependency list (package.xml), 
+    # but rosdep cannot seem to locate the micro-ros-msgs package, even though it should be included in the ROS index:  https://index.ros.org/p/micro_ros_msgs/#humble-overview   
+    # Note: While rosdep seem to  install all dependencies for the micro-ROS-Agent (no errors), 
+    #       running the agent may still fail with an error indicating 
+    #       that the micro-ros-msgs package is missing. Manual checks via apt/rosdep 
+    #       confirm that it is indeed not installed (idk why...). Therefore, we install it manually..
+
 # TODO /root/ros2_droneswarm/workspaces/microros_ws/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent: error while loading shared libraries: libmicro_ros_msgs__rosidl_typesupport_cpp.so: cannot open shared object file: No such file or directory
 # TOOO når man launchr node, exiter den ikke terminalen..
 # TODO når man booter pi'en skal den jo helst runne noden fra starten efter den her booted..
@@ -121,6 +129,7 @@ EOF
             # NEJ VENT... hvis vi kører compose down-->up så tror jeg måske den sletter de installed dependencies..
                 # SÅ : vi skal måske have restart always på? (hvis den altså gemmer state..) og så docker exec vi i den der launch service, for at starte noden efter en reboot.
     # MEN chatten siger når den "restarter" efter boot, vil den kører cmd igen (starte fra bunden).. ved ikke om det passer.. men så har jeg problemer at nodesne ikke bliver launched/run
+# TODO den skal også også kunne install requirements.txt dependencies fra vores workspace... (det kræver ogås requirements.txt er i install foldere.. ikke bare i source koden)
 
 
 # # Optionally install dependencies on the target.
