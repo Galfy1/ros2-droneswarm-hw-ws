@@ -85,7 +85,7 @@ our_ws_target_dir_in_docker=/root/ros2_droneswarm/workspaces/our_ws
 ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
     cd $ros2_container_base_dir
     sudo docker compose down || true
-    sudo docker compose up -d
+    sudo docker compose up --build -d
     if [ "$install_dependencies" = "yes" ]; then
         sudo docker exec $ros2_container_name bash -c "
             source /opt/ros/humble/setup.bash &&
@@ -118,6 +118,8 @@ EOF
     # men som det er nu... så starter den bre dockeren i dens tidligere state.. aka nodesne køres ikke fra starten efter en reboot
     # potenteil løsning.. ikke sæt restart:always. i stedet lav et systemd service der kører docker compose down-->up -d ved boot. (så skal der ændres ting i den her fil)
             # vi skal aligevel måske kunne sætte er delay på hvordan den skal starte (fordi dronen skal have gps.. er der en måde at få info om det? måske der er et topic om det, som vi kan vente på i ros koden.)
+            # NEJ VENT... hvis vi kører compose down-->up så tror jeg måske den sletter de installed dependencies..
+                # SÅ : vi skal måske have restart always på? (hvis den altså gemmer state..) og så docker exec vi i den der launch service, for at starte noden efter en reboot.
     # MEN chatten siger når den "restarter" efter boot, vil den kører cmd igen (starte fra bunden).. ved ikke om det passer.. men så har jeg problemer at nodesne ikke bliver launched/run
 
 
