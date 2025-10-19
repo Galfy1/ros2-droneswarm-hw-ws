@@ -1,5 +1,7 @@
 # most minimal ros humble image:
-FROM ros:humble-ros-core 
+#FROM ros:humble-ros-core 
+#FROM ros:humble-ros-base
+FROM arm64v8/ros:humble
 # (https://hub.docker.com/_/ros)
 
 # RUN vs CMD vs ENTRYPOINT:
@@ -12,11 +14,8 @@ FROM ros:humble-ros-core
 # you can have both ENTRYPOINT and CMD in the same Dockerfile. then, CMD will provide additional arguments to the ENTRYPOINT command (i.e. the CMD arguments can still be overwritten if params are provided when docker run).
 
 # rosdep is not part of ros-core, se we install it manually
-RUN apt-get update && apt-get install -y python3-rosdep
-
-
-
-
+#RUN apt-get update && apt-get install -y python3-rosdep
+RUN rosdep init
 
 
 
