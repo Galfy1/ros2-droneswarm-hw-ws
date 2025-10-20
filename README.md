@@ -78,10 +78,24 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
     - Because systemctl user services won’t start until someone logs in, enable linger for login:
         - loginctl enable-linger $USER
 1. Install and setup ROS2 Docker on Pi:
-    - asd  
+    - (this is done on the computer, not the Pi)
+    - Run the following scripts in the following order (all scripts can be found in this repo)
+    - Stand in the "ros2_in_docker_for_pi" folder
+        - ./install_docker_on_pi.sh
+        - ./copy_ros2_os_to_pi.sh
+    - Stand in the root of this repo
+        - ./build_copy_start_on_pi.sh yes yes yes no
 
+## How to update the Pi when you change the source code?
+Simply run ./build_copy_start_on_pi.sh with your desired yes/no flag options:
+ - build_copy_start_on_pi.sh <build_application> <build_micro_ros_agent> <install_dependencies> <force_rebuild_of_ros2_docker>
+     - _<build_application>_: Build the droneswarm workspace.
+     - _<build_micro_ros_agent>_: Build the micro ros agent - you probably only want to do this if there are updates to the micro ros agent.
+     - _<install_dependencies>_: Install dependencies on the Pi. You need to set this to "yes" if you add to the dependencies of a ROS2 package.
+     - _<force_rebuild_of_ros2_docker>_: Force a rebuild of the ros2 Docker Compose/Dockerfile. If the ros2 docker container is already running on the pi, changes to the ros2 dockerfile or docker-compose file will NOT be applied automatically. Therefore, you need to force re-build the docker if you have made changes to the ros2 dockerfile or docker-compose file. If you set force_rebuild_of_ros2_docker to yes, you probably also want to set install_dependencies to yes (since all installed dependencies are removed as the docker compose is brought down and up again).
 
-
+A Typical command will look like this:
+- ./build_copy_start_on_pi.sh yes no no no
   
 # About Dependencies
 
