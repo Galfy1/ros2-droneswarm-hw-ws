@@ -134,22 +134,8 @@ EOF
     #       that the micro-ros-msgs package is missing. Manual checks via apt/rosdep 
     #       confirm that it is indeed not installed (idk why...). Therefore, we install it manually..
 
-# TODO når vi starter ros nodesne når vi booter, skal man så først stoppe already running nodes først? eller stopper de nodes når de gamle systemd services stopper (fordi pi'en slukker)
-# TODO /root/ros2_droneswarm/workspaces/microros_ws/install/micro_ros_agent/lib/micro_ros_agent/micro_ros_agent: error while loading shared libraries: libmicro_ros_msgs__rosidl_typesupport_cpp.so: cannot open shared object file: No such file or directory
-# TOOO når man launchr node, exiter den ikke terminalen..
-# TODO når man booter pi'en skal den jo helst runne noden fra starten efter den her booted..
-    # men som det er nu... så starter den bre dockeren i dens tidligere state.. aka nodesne køres ikke fra starten efter en reboot
-    # potenteil løsning.. ikke sæt restart:always. i stedet lav et systemd service der kører docker compose down-->up -d ved boot. (så skal der ændres ting i den her fil)
-            # vi skal aligevel måske kunne sætte er delay på hvordan den skal starte (fordi dronen skal have gps.. er der en måde at få info om det? måske der er et topic om det, som vi kan vente på i ros koden.)
-            # NEJ VENT... hvis vi kører compose down-->up så tror jeg måske den sletter de installed dependencies..
-                # SÅ : vi skal måske have restart always på? (hvis den altså gemmer state..) og så docker exec vi i den der launch service, for at starte noden efter en reboot.
-    # MEN chatten siger når den "restarter" efter boot, vil den kører cmd igen (starte fra bunden).. ved ikke om det passer.. men så har jeg problemer at nodesne ikke bliver launched/run
 
-    # PLAN: 
-        # sæt restart: always
-        # i den her fil her, down-->up containeren, men IKKE launch nodesne
-        # lav systemd service til at launche nodes (efter der er internet - launch our ws efter microros)
-        # i ros softwaren, sikre at der er gps før applicationen starter (det er der sikkert en måde at se på. måske bare at den er "armable")
+# TODO i ros softwaren, sikre at der er gps før applicationen starter (det er der sikkert en måde at se på. måske bare at den er "armable")
 
 # TODO den skal også også kunne install requirements.txt dependencies fra vores workspace... (det kræver ogås requirements.txt er i install foldere.. ikke bare i source koden)
 
