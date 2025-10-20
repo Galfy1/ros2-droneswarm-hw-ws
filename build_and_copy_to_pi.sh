@@ -32,14 +32,14 @@ build_micro_ros_agent=$2
 install_dependencies=$3
 
 # create variables
-pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
+pi_hostname=raspberrypi.local # this is the assumed hostname of the pi, change if needed.
 
 ros2_container_base_dir=~/ros2_droneswarm
 our_ws_target_dir=$ros2_container_base_dir/workspaces/our_ws
 microros_ws_target_dir=$ros2_container_base_dir/workspaces/microros_ws
-ros2_container_name="ros2_droneswarm-ros2-1" # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
-main_ros2_package_name="droneswarm"
-main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
+ros2_container_name=ros2_droneswarm-ros2-1 # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
+# main_ros2_package_name="droneswarm"
+# main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
 
 # # Make sure any already existing container named "dummy" is removed before we start.
 # docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
@@ -78,17 +78,17 @@ main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch 
 microros_ws_target_dir_in_docker=/root/ros2_droneswarm/workspaces/microros_ws
 our_ws_target_dir_in_docker=/root/ros2_droneswarm/workspaces/our_ws
 
-# Step 1: Re-run the container (down/up cus of compose) to make sure any previous ros2 nodes are stopped.
+# Step 1: Re-run the container (down/up cus of compose) to make sure any previous ros2 nodes are stopped 
+#         (--build the container when upping, to make sure any changes in its docker/compose file is applyed).
 # Step 2: (optional) Install dependencies inside the container.
-# Step 3: Run the micro-ROS agent and our application launch file inside the container
 # (https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/)
+# (note: ros2 underlay is already sourced in the docker image)
 ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
     cd $ros2_container_base_dir
     sudo docker compose down || true
     sudo docker compose up --build -d
     if [ "$install_dependencies" = "yes" ]; then
         sudo docker exec $ros2_container_name bash -c "
-            source /opt/ros/humble/setup.bash &&
             apt update &&
             rosdep update &&
             if [ "$build_micro_ros_agent" = "yes" ]; then
@@ -103,13 +103,13 @@ ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on
     else
         echo "Dependencies will NOT be installed on the target device."
     fi
-    sudo docker exec $ros2_container_name bash -c "
-        cd $microros_ws_target_dir_in_docker &&
-        source install/setup.bash &&
-        ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyS0
-        cd $our_ws_target_dir_in_docker &&
-        source install/setup.bash &&
-        ros2 launch $main_ros2_package_name $main_ros2_launchfile "
+    # sudo docker exec $ros2_container_name bash -c "
+    #     cd $microros_ws_target_dir_in_docker &&
+    #     source install/setup.bash &&
+    #     ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyS0 &&
+    #     cd $our_ws_target_dir_in_docker &&
+    #     source install/setup.bash &&
+    #     ros2 launch $main_ros2_package_name $main_ros2_launchfile "
 EOF
 
 # Regarding the "ros-humble-micro-ros-msgs package in the above script:
@@ -129,6 +129,13 @@ EOF
             # NEJ VENT... hvis vi kører compose down-->up så tror jeg måske den sletter de installed dependencies..
                 # SÅ : vi skal måske have restart always på? (hvis den altså gemmer state..) og så docker exec vi i den der launch service, for at starte noden efter en reboot.
     # MEN chatten siger når den "restarter" efter boot, vil den kører cmd igen (starte fra bunden).. ved ikke om det passer.. men så har jeg problemer at nodesne ikke bliver launched/run
+
+    # PLAN: 
+        # sæt restart: always
+        # i den her fil her, down-->up containeren, men IKKE launch nodesne
+        # lav systemd service til at launche nodes (efter der er internet - launch our ws efter microros)
+        # i ros softwaren, sikre at der er gps før applicationen starter (det er der sikkert en måde at se på. måske bare at den er "armable")
+
 # TODO den skal også også kunne install requirements.txt dependencies fra vores workspace... (det kræver ogås requirements.txt er i install foldere.. ikke bare i source koden)
 
 

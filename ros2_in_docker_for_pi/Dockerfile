@@ -4,6 +4,8 @@ FROM ros:humble-ros-core
 #FROM arm64v8/ros:humble
 # (https://hub.docker.com/_/ros)
 
+# ROS2 underlay is already sourced in this base image (i.e. source /opt/ros/humble/setup.sh)
+
 # RUN vs CMD vs ENTRYPOINT:
 # https://www.geeksforgeeks.org/linux-unix/difference-between-run-vs-cmd-vs-entrypoint-docker-commands/
 # https://www.youtube.com/watch?v=U1P7bqVM7xM (om CMD vs ENTRYPOINT)
@@ -22,7 +24,7 @@ FROM ros:humble-ros-core
     # rosdep is not part of ros-core, se we install it manually
 RUN apt update && apt install -y python3-rosdep
 
-RUN source /opt/ros/humble/setup.sh && rosdep init
+RUN rosdep init
 
 # TODO: overvej at rosdep init herinde (tror det kræver underlay source men ikke sikker)
 
