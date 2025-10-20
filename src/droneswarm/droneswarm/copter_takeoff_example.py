@@ -11,6 +11,7 @@ import time
 
 from rclpy.node import Node
 from geographic_msgs.msg import GeoPoseStamped
+from geometry_msgs.msg import Twist
 
 from ardupilot_msgs.srv import ArmMotors
 from ardupilot_msgs.srv import ModeSwitch
@@ -31,7 +32,18 @@ COPTER_MODE_GUIDED = 4 # Dont change
 def takeoff_land_loop(self):
     
     if self.current_geopose.pose.position.altitude < TAKEOFF_ALT:
+        # Takeoff phase
+        self.publish_position_setpoint_global(
+            lat=self.current_geopose.pose.position.latitude,
+            lon=self.current_geopose.pose.position.longitude,
+            alt=TAKEOFF_ALT,
+            velocity=1.0,
+            yaw=0.0
+        )
+    else:
+        # Land phase
         pass
+        # TODO self.land()
 
 
 class CopterTakeoff(Node):
@@ -85,7 +97,6 @@ class CopterTakeoff(Node):
         stamp = msg.header.stamp
         if stamp.sec: # only process if we have a valid timestamp
             #self.get_logger().info("From AP : Geopose [sec:{}, nsec: {}]".format(stamp.sec, stamp.nanosec))
-
             # Store current geopose
             self.current_geopose = msg
 
@@ -95,14 +106,11 @@ class CopterTakeoff(Node):
         req.arm = True
         future = self.arm_client.call_async(req)
         future.add_done_callback(self.arm_client_callback)
-        #rclpy.spin_until_future_complete(self, future) # TODO DER ER MÅSKE NOGET HER. DET HER ER BLOCKING HVIS VI KALDER DET I MAIN LOOP. SÅ SKAL arm_with_timeout nok også laves om i
-        #return future.result()
 
     def arm_client_callback(self, future):
         result = future.result()
         # Set flag True if succesfully armed:
         self.arming_complete = result.result # (yes, there is a result field in ArmMotors.srv)
-
 
     def disarm(self):
         self.disarming_complete = False
@@ -111,20 +119,10 @@ class CopterTakeoff(Node):
         future = self.arm_client.call_async(req)
         future.add_done_callback(self.disarm_client_callback)
 
-
     def disarm_client_callback(self, future):
         result = future.result()
         # Set flag True if succesfully disarmed:
         self.disarming_complete = result.result # (yes, there is a result field in ArmMotors.srv)
-
-    # def arm_with_timeout(self, timeout: rclpy.duration.Duration):
-    #     # Try to arm. Returns true on success, or false if arming fails or times out.
-    #     armed = False
-    #     start = self.get_clock().now()
-    #     while not armed and self.get_clock().now() - start < timeout:
-    #         armed = self.arm().result
-    #         time.sleep(1) #iTODO.. er det fint?? hvis vi har et main loop???
-    #     return armed
 
     def switch_to_guided_mode(self):
         self.switched_to_guided = False # reset flag
@@ -132,8 +130,6 @@ class CopterTakeoff(Node):
         req.mode = COPTER_MODE_GUIDED
         future = self.mode_switch_client.call_async(req)
         future.add_done_callback(self.switch_to_guided_mode_client_callback)
-        #rclpy.spin_until_future_complete(self, future) # TODO samme som i arm (også se switch_to_guided_mode_with_timeout )
-        #return future.result()
 
     def switch_to_guided_mode_client_callback(self, future):
         result = future.result() # TODO de havde future.result().result i deres kode.. men det virker forkert?? kom tilbage hvis det ikke virker
@@ -141,25 +137,16 @@ class CopterTakeoff(Node):
         # Set flag True if succesfully switched to guided mode:
         self.switched_to_guided = (result.status) or (result.curr_mode == COPTER_MODE_GUIDED)
 
-    # def switch_to_guided_mode_with_timeout(self, timeout: rclpy.duration.Duration):
-    #     # Try to switch to guided mode. Returns true on success, or false if it fails or times out.
-    #     switched = False
-    #     start = self.get_clock().now()
-    #     while not switched and self.get_clock().now() - start < timeout:
-    #         result = self.switch_to_guided_mode().result
-    #         switched = (result.status) or (result.curr_mode == COPTER_MODE_GUIDED)
-    #         time.sleep(1)
-    #     return switched
-    
-
     def ardupilot_takeoff(self, alt):
         self.ardupilot_takeoff_complete = False
         req = Takeoff.Request()
         req.alt = alt
         future = self.takeoff_client.call_async(req)
         future = self.add_done_callback(self.ardupilot_takeoff_client_callback)
-        # rclpy.spin_until_future_complete(self, future)
-        # return future.result()
+
+    def land(self):
+        pass
+        # TODO skal gøres ved at sætte den i "land" mode.. aka switch_to_guided_mode skal nok laves om til at kunne tage en mode parameter
 
     def ardupilot_takeoff_client_callback(self, future):
         result = future.result()
@@ -168,32 +155,20 @@ class CopterTakeoff(Node):
 
  
     def publish_position_setpoint_global(self, lat: float, lon: float, alt: float, velocity: float = 1.0, yaw: float = 0.0):
-        # TODO 
+        # TODO THE ALT SIGN IS REVERSED COMPARED TO PX4
 
-        self.cmd_gps_pose_publisher
+        msg = GlobalPosition()
+        msg.latitude = lat
+        msg.longitude = lon
+        msg.altitude = alt
+        msg.yaw = yaw
+        velocity = Twist()
+        velocity.linear.x = velocity
+        velocity.linear.y = velocity
+        velocity.linear.z = velocity
+        msg.velocity = velocity
+        self.cmd_gps_pose_publisher.publish(msg)
     
-
-    # def takeoff(self, alt):
-    #     req = Takeoff.Request()
-    #     req.alt = alt
-    #     future = self._client_takeoff.call_async(req)
-    #     rclpy.spin_until_future_complete(self, future) # TODO
-    #     return future.result()
-
-    # def takeoff_with_timeout(self, alt: int, timeout: rclpy.duration.Duration):
-    #     """Try to takeoff. Returns true on success, or false if takeoff fails or times out."""
-    #     takeoff_success = False
-    #     start = self.get_clock().now()
-    #     while not takeoff_success and self.get_clock().now() - start < timeout:
-    #         result = self.takeoff(alt)
-    #         takeoff_success = result.status
-    #         time.sleep(1) # TODO
-
-    #     return takeoff_success
-
-    # def get_cur_geopose(self): # TODO slet hvis ikke brugt
-    #     """Return latest geopose."""
-    #     return self.current_geopose
     
     ##################### MAIN CONTROL LOOP #####################
 
@@ -206,7 +181,7 @@ class CopterTakeoff(Node):
             #self.get_logger().info("Switching to GUIDED mode...")
             self.switch_to_guided_mode()
             return  # wait for next loop iteration
-        self.get_logger().info("Copter is in GUIDED mode.")
+        #self.get_logger().info("Copter is in GUIDED mode.")
 
         # STEP 2: Arm motors if not already armed
         if not self.arming_complete:
@@ -230,7 +205,6 @@ class CopterTakeoff(Node):
         if elapsed_time_s > CONTROL_LOOP_DT:
             self.get_logger().warn(f"Control loop overrun: {elapsed_time_s:.4f} seconds")
 
-        pass
 
 
 
