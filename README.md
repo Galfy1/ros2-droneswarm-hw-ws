@@ -53,17 +53,68 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
 1. Setup Pi to auto start ROS2 nodes:
     - SSH into the pi using:
         - `ssh raspberrypi.local`
-    - Create a script on the Pi that sources the ROS 2 workspace and runs the Micro ROS Agent and the droneswarm (place the following content in each file):
+    - (In the following scripts, remember to replace `<pi_username\>` with the username of the Pi)
+    - Create a systemd service to auto start the Micro ROS Agent and the droneswarm (place the following content in each file):
         - `mkdir -p ~/.config/systemd/user`
         - `nano ~/.config/systemd/user/micro-ros-agent.service`
-            - TODO
+            - ```
+              [Unit]
+              Description=Start Micro-ROS Agent over serial /dev/ttyS0 (in docker)
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              WorkingDirectory=/home/<pi_username>
+              Type=simple
+              ExecStart=/home/<pi_username>/.local/lib/start-micro-ros-agent.sh
+              Restart=on-failure
+
+              [Install]
+              WantedBy=default.target
+              ```
         - `nano ~/.config/systemd/user/our-ws.service`
-            -  TODO
+            - ```
+              [Unit]
+              Description=Used to autostart a custom ROS2 application (i.e. our_ws) (in docker)
+              After=network-online.target micro-ros-agent.service
+              Wants=network-online.target
+
+              [Service]
+              WorkingDirectory=/home/<pi_username>
+              Type=simple
+              ExecStart=/home/<pi_username>/.local/lib/start-our-ws.sh
+              Restart=on-failure
+
+              [Install]
+              WantedBy=default.target
+              ```
     - Create the startup scripts that launch the ROS2 nodes (place the following content in each file):
         - `nano ~/.local/lib/start-micro-ros-agent.sh`
-            - asd
+            - ```
+              #!/bin/bash
+
+              ros2_container_name="ros2_droneswarm-ros2-1"
+              microros_ws_target_dir_in_docker="/root/ros2_droneswarm/workspaces/microros_ws"
+
+              sudo docker exec $ros2_container_name bash -c "
+                cd $microros_ws_target_dir_in_docker &&
+                source install/setup.bash &&
+                ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyS0 "
+              ```
         - `nano ~/.local/lib/start-our-ws.sh`
-            - asd
+            - ```
+              #!/bin/bash
+
+              ros2_container_name="ros2_droneswarm-ros2-1"
+              our_ws_target_dir_in_docker="/root/ros2_droneswarm/workspaces/our_ws"
+              main_ros2_package_name="droneswarm"
+              main_ros2_launchfile="tsunami_swarm.launch.py"
+
+              sudo docker exec $ros2_container_name bash -c "
+                cd $our_ws_target_dir_in_docker &&
+                source install/setup.bash &&
+                ros2 launch $main_ros2_package_name $main_ros2_launchfile "
+              ```
     - Finally, make the scripts executable, reload services, and start the new systemd services:
         - ```
           chmod +x ~/.local/lib/start-micro-ros-agent.sh
