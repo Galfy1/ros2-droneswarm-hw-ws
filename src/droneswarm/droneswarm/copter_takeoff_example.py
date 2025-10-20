@@ -11,16 +11,27 @@ import time
 
 from rclpy.node import Node
 from geographic_msgs.msg import GeoPoseStamped
-# Ardupilot msg/srv: https://github.com/ArduPilot/ardupilot/tree/master/Tools/ros2/ardupilot_msgs:
+
 from ardupilot_msgs.srv import ArmMotors
 from ardupilot_msgs.srv import ModeSwitch
 from ardupilot_msgs.srv import Takeoff
+from ardupilot_msgs.msg import GlobalPosition
+
+# Ardupilot msg/srv interfaces: https://github.com/ArduPilot/ardupilot/tree/master/Tools/ros2/ardupilot_msgs
+# Ardupilot ROS2 interfaces: https://ardupilot.org/dev/docs/ros2-interfaces.html 
 
 
 CONTROL_LOOP_DT = 0.1  # seconds
 TAKEOFF_ALT = 10.5 # feel free to change
 
 COPTER_MODE_GUIDED = 4 # Dont change
+
+
+
+def takeoff_land_loop(self):
+    
+    if self.current_geopose.pose.position.altitude < TAKEOFF_ALT:
+        pass
 
 
 class CopterTakeoff(Node):
@@ -52,6 +63,10 @@ class CopterTakeoff(Node):
         # Create subscribers
         self.geopose_subscriber = self.create_subscription(GeoPoseStamped, "/ap/geopose/filtered", self.geopose_callback, qos_profile)
 
+        # Create publishers
+        self.cmd_gps_pose_publisher = self.create_publisher(GlobalPosition, "ap/cmd_gps_pose", qos_profile)
+    
+
         # Create a timer to publish control commands
         self.timer = self.create_timer(CONTROL_LOOP_DT, self.control_loop_callback)
 
@@ -60,6 +75,7 @@ class CopterTakeoff(Node):
         self.switched_to_guided = False
         self.arming_complete = False
         self.disarming_complete = False
+        self.ardupilot_takeoff_complete = False
 
 
     ##################### METHODS #####################
@@ -136,16 +152,33 @@ class CopterTakeoff(Node):
     #     return switched
     
 
- 
-
-    
-
-    def takeoff(self, alt):
+    def ardupilot_takeoff(self, alt):
+        self.ardupilot_takeoff_complete = False
         req = Takeoff.Request()
         req.alt = alt
-        future = self._client_takeoff.call_async(req)
-        rclpy.spin_until_future_complete(self, future) # TODO
-        return future.result()
+        future = self.takeoff_client.call_async(req)
+        future = self.add_done_callback(self.ardupilot_takeoff_client_callback)
+        # rclpy.spin_until_future_complete(self, future)
+        # return future.result()
+
+    def ardupilot_takeoff_client_callback(self, future):
+        result = future.result()
+        # Set flag True if succesfully took off:
+        self.ardupilot_takeoff_complete = result.status
+
+ 
+    def publish_position_setpoint_global(self, lat: float, lon: float, alt: float, velocity: float = 1.0, yaw: float = 0.0):
+        # TODO 
+
+        self.cmd_gps_pose_publisher
+    
+
+    # def takeoff(self, alt):
+    #     req = Takeoff.Request()
+    #     req.alt = alt
+    #     future = self._client_takeoff.call_async(req)
+    #     rclpy.spin_until_future_complete(self, future) # TODO
+    #     return future.result()
 
     # def takeoff_with_timeout(self, alt: int, timeout: rclpy.duration.Duration):
     #     """Try to takeoff. Returns true on success, or false if takeoff fails or times out."""
@@ -176,10 +209,20 @@ class CopterTakeoff(Node):
         self.get_logger().info("Copter is in GUIDED mode.")
 
         # STEP 2: Arm motors if not already armed
-
-
-
-
+        if not self.arming_complete:
+            #self.get_logger().info("Arming motors...")
+            self.arm()
+            return  # wait for next loop iteration
+        
+        # Step 3: Do initial "ardupilot takeoff"
+        # (Not sure if ardupilot require using its "takeoff" service, before we can publish pos setpoints - or we if can publish pos directly after arming like on PX4
+        # Just to make sure, we run an initial "ardupilot takeoff" command, to get in the air.)
+        if not self.ardupilot_takeoff_complete:
+            self.takeoff_client(1) # 1 meter
+            return
+    
+        # STEP 4: do whatever you want in your "application":
+        takeoff_land_loop(self)
 
         # ERROR CHECKING - Make sure control loop processing time does not exceed CONTROL_LOOP_DT:
         end_time = self.get_clock().now()
