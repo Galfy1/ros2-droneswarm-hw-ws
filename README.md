@@ -35,11 +35,11 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
     - Select your SD-card
     - For “OS Customisation”:
         - In “General tap”
-            - configure username and password (don’t use an empty password)
-            - configure wifi info
-            - configure hostname to “raspberrypi”
+            - Set hostname to “raspberrypi”
+            - Set username and password (don’t use an empty password)
+            - Configure wireless LAN
         - In “Services” tap:
-            - enable SSH
+            - Enable SSH
     - Flash the SD-card
 1. Setup computer for Arm cross-compilation:
     - It is assumed that you are using a Linux machine.
