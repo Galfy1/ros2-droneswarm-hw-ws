@@ -135,8 +135,6 @@ EOF
     #       confirm that it is indeed not installed (idk why...). Therefore, we install it manually..
 
 
-# TODO i ros softwaren, sikre at der er gps før applicationen starter (det er der sikkert en måde at se på. måske bare at den er "armable")
-
 # TODO den skal også også kunne install requirements.txt dependencies fra vores workspace... (det kræver ogås requirements.txt er i install foldere.. ikke bare i source koden)
 
 

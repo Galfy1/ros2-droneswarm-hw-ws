@@ -218,7 +218,7 @@ class CopterTakeoff(Node):
         # (Not sure if ardupilot require using its "takeoff" service, before we can publish pos setpoints - or we if can publish pos directly after arming like on PX4
         # Just to make sure, we run an initial "ardupilot takeoff" command, to get in the air.)
         if not self.ardupilot_takeoff_complete:
-            self.takeoff_client(1) # 1 meter
+            self.ardupilot_takeoff(1) # 1 meter
             return
     
         # STEP 4: do whatever you want in your "application":
