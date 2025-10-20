@@ -108,7 +108,7 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
               ros2_container_name="ros2_droneswarm-ros2-1"
               our_ws_target_dir_in_docker="/root/ros2_droneswarm/workspaces/our_ws"
               main_ros2_package_name="droneswarm"
-              main_ros2_launchfile="tsunami_swarm.launch.py"
+              main_ros2_launchfile="droneswarm.launch.py"
 
               sudo docker exec $ros2_container_name bash -c "
                 cd $our_ws_target_dir_in_docker &&
