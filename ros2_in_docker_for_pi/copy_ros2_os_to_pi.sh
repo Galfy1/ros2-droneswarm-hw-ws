@@ -12,7 +12,3 @@ pi_hostname="raspberrypi.local"
 target_dir=~/ros2_droneswarm
 
 rsync -av --mkpath Dockerfile docker-compose.yml $pi_hostname:$target_dir
-
-
-
-# restart dockeren. (vi kan simpel exitte docker containeren, da den er sat til always restart i docker-compose filen)

@@ -137,47 +137,4 @@ EOF
 
 # TODO den skal også også kunne install requirements.txt dependencies fra vores workspace... (det kræver ogås requirements.txt er i install foldere.. ikke bare i source koden)
 
-
 # Debugging info: use "sudo docker exec -it ros2_droneswarm-ros2-1 /bin/bash" to get a bash terminal in the running ros2 container on the pi.
-
-
-# # Optionally install dependencies on the target.
-# # we only want to ssh once... thats why the if statements are a bit complex.
-# if [ "$install_dependencies" = "yes" ]; then
-#     if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "no" ]]; then
-#         ssh -t $pi_hostname "cd $our_ws_target_dir && \
-#             sudo rosdep init || true && \
-#             sudo apt update && \
-#             rosdep update && \
-#             rosdep install --from-paths install --dependency-types exec && \
-#             exit"
-#     fi
-#     if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "yes" ]]; then
-#         ssh -t $pi_hostname "cd $microros_ws_target_dir && \
-#             sudo rosdep init || true && \
-#             sudo apt update && \
-#             rosdep update && \
-#             rosdep install --from-paths install --dependency-types exec && \
-#             exit"
-#     fi
-#     if [[ "$build_application" = "yes" && "$build_micro_ros_agent" = "yes" ]]; then
-#         ssh -t $pi_hostname "cd $microros_ws_target_dir && \
-#             sudo rosdep init || true && \
-#             sudo apt update && \
-#             rosdep update && \
-#             rosdep install --from-paths install --dependency-types exec && \
-#             cd $our_ws_target_dir && \
-#             sudo rosdep init || true && \
-#             sudo apt update && \
-#             rosdep update && \
-#             rosdep install --from-paths install --dependency-types exec && \
-#             exit"
-#     fi
-#     if [[ "$build_application" = "no" && "$build_micro_ros_agent" = "no" ]]; then
-#         echo "Error, you need to build either the application or the micro-ROS agent to install dependencies."
-#         exit 1
-#     fi
-# else
-#     echo "Dependencies will NOT be installed on the target device."
-# fi
-
