@@ -50,7 +50,7 @@ class CopterTakeoff(Node):
 
     def __init__(self) -> None:
         """Initialise the node."""
-        super().__init__("'copter_takeoff_and_land'")
+        super().__init__("copter_takeoff_and_land")
 
         # Configure QoS profile for publishing and subscribing
         qos_profile = rclpy.qos.QoSProfile(
