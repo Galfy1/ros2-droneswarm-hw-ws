@@ -40,6 +40,7 @@ install_dependencies=$3
 force_rebuild_of_ros2_docker=$4
 
 # create variables
+pi_username="devboard"
 pi_hostname=raspberrypi.local # this is the assumed hostname of the pi, change if needed.
 
 ros2_container_base_dir=~/ros2_droneswarm
@@ -69,11 +70,11 @@ if [ "$build_application" = "yes" ]; then
     # Copy the installation directory from the docker image to the host.
     docker cp dummy:/our_ros2_ws/install/. temp_our_ws/install 
     # And now, from host to target's directory, but ignore COLCON_IGNORE.
-    rsync -av --mkpath --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_hostname:$our_ws_target_dir
+    rsync -av --mkpath --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@$pi_hostname:$our_ws_target_dir
 fi
 if [ "$build_micro_ros_agent" = "yes" ]; then
     docker cp dummy:/micro-ROS-Agent/install/. temp_micro_agent/install
-    rsync -av --mkpath --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_hostname:$microros_ws_target_dir
+    rsync -av --mkpath --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@$pi_hostname:$microros_ws_target_dir
 fi
 
 docker rm -f dummy
@@ -91,7 +92,7 @@ our_ws_target_dir_in_docker=/root/ros2_droneswarm/workspaces/our_ws
 # Step 2: (optional) Install dependencies inside the container.
 # Step 3: Reboot Pi. This will ensure that nodes are relaunched using new build files (nodes are launched in a systemd service at boot - cus we set it up that way).
 # (https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/)
-ssh $pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
+ssh $pi_username@$pi_hostname << EOF   # (no quotes around EOF to allow variable expansion on local machine)
     cd $ros2_container_base_dir
     if [ "$force_rebuild_of_ros2_docker" = "yes" ]; then
         sudo docker compose down || true

@@ -7,11 +7,12 @@
 
 set -e  # Stop the script if any command fails
 
+pi_username="devboard"
 pi_hostname="raspberrypi.local"
 
 # https://docs.docker.com/engine/install/debian/ (includes docker-compose-plugin)
 # (https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/)
-ssh $pi_hostname << 'EOF' # use single quotes here to avoid variable expansion on local machine
+ssh $pi_username@$pi_hostname << 'EOF' # use single quotes here to avoid variable expansion on local machine
     for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
     sudo apt-get update
     sudo apt-get install ca-certificates curl
