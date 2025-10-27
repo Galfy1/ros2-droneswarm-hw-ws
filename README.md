@@ -89,6 +89,7 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
               WantedBy=default.target
               ```
     - Create the startup scripts that launch the ROS2 nodes (place the following content in each file):
+        - `mkdir -p ~/.local/lib/`
         - `nano ~/.local/lib/start-micro-ros-agent.sh`
             - ```
               #!/bin/bash
