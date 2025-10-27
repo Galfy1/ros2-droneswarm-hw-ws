@@ -45,9 +45,9 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
     - It is assumed that you are using a Linux machine.
         - (if you use WSL, see "If Using WSL in Windows" section bellow) 
     - If you don't already have docker, install it from: https://docs.docker.com/engine/install/ubuntu/ (example link for Ubuntu)
-    - Follow the sections:
-        - “Uninstall old versions”
-        - “Install using the apt repository”
+        - Follow the sections:
+            - “Uninstall old versions”
+            - “Install using the apt repository”
     - Install QEMU for Docker Multi-platform builds:
         - `docker run --privileged --rm tonistiigi/binfmt --install all`
 1. Setup Pi to auto start ROS2 nodes:
