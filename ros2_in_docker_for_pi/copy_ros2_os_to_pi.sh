@@ -9,6 +9,7 @@ set -e  # Stop the script if any command fails
 
 pi_username="devboard"
 pi_hostname="raspberrypi.local"
-target_dir=~/ros2_droneswarm
+target_dir="~/ros2_droneswarm"
+
 
 rsync -av --mkpath Dockerfile docker-compose.yml $pi_username@$pi_hostname:$target_dir

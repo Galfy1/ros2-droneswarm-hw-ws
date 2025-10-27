@@ -41,12 +41,12 @@ force_rebuild_of_ros2_docker=$4
 
 # create variables
 pi_username="devboard"
-pi_hostname=raspberrypi.local # this is the assumed hostname of the pi, change if needed.
+pi_hostname="raspberrypi.local" # this is the assumed hostname of the pi, change if needed.
 
-ros2_container_base_dir=~/ros2_droneswarm
-our_ws_target_dir=$ros2_container_base_dir/workspaces/our_ws
-microros_ws_target_dir=$ros2_container_base_dir/workspaces/microros_ws
-ros2_container_name=ros2_droneswarm-ros2-1 # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
+ros2_container_base_dir="~/ros2_droneswarm"
+our_ws_target_dir="$ros2_container_base_dir/workspaces/our_ws"
+microros_ws_target_dir="$ros2_container_base_dir/workspaces/microros_ws"
+ros2_container_name="ros2_droneswarm-ros2-1" # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
 # # main_ros2_package_name="droneswarm"
 # # main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
 
