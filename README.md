@@ -51,6 +51,14 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
             - “Install using the apt repository”
     - Install QEMU for Docker Multi-platform builds:
         - `docker run --privileged --rm tonistiigi/binfmt --install all`
+1. Install and setup ROS2 Docker on Pi:
+    - (this is done on the computer, not the Pi)
+    - Run the following scripts in the following order (all scripts can be found in this repo)
+    - Stand in the "ros2_in_docker_for_pi" folder
+        - `./install_docker_on_pi.sh`
+        - `./copy_ros2_os_to_pi.sh`
+    - Stand in the root of this repo
+        - `./build_copy_start_on_pi.sh yes yes yes no`
 1. Setup Pi to auto start ROS2 nodes:
     - SSH into the pi using:
         - `ssh raspberrypi.local`
@@ -132,14 +140,6 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
           ```
     - Because systemctl user services won’t start until someone logs in, enable linger for login:
         - `loginctl enable-linger $USER`
-1. Install and setup ROS2 Docker on Pi:
-    - (this is done on the computer, not the Pi)
-    - Run the following scripts in the following order (all scripts can be found in this repo)
-    - Stand in the "ros2_in_docker_for_pi" folder
-        - `./install_docker_on_pi.sh`
-        - `./copy_ros2_os_to_pi.sh`
-    - Stand in the root of this repo
-        - `./build_copy_start_on_pi.sh yes yes yes no`
 
 ## How to update the Pi when you change the source code?
 Simply run ./build_copy_start_on_pi.sh with your desired yes/no flag options:
