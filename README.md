@@ -36,7 +36,8 @@ NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" a
     - For “OS Customisation”:
         - In “General tap”
             - Set hostname to “raspberrypi”
-            - Set username and password (don’t use an empty password)
+            - Set username to "devboard"
+            - Set password (don’t use an empty password)
             - Configure wireless LAN
         - In “Services” tap:
             - Enable SSH
