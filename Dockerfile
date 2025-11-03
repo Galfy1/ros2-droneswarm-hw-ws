@@ -12,6 +12,18 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
     apt-get update && apt-get -y --no-install-recommends install git cmake build-essential
 
+# # Mount and update apt lists
+# RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+#     sudo apt-get update
+
+# # Mount and update apt cache (optional, but keeps caching separate)
+# RUN --mount=target=/var/cache/apt,type=cache,sharing=locked \
+#     sudo apt-get upgrade -y
+
+# # Install build tools
+# RUN apt-get install -y --no-install-recommends git cmake build-essential
+
+
 
 # WORKDIR /
 # RUN git clone --depth 1 --branch humble https://github.com/micro-ROS/micro-ROS-Agent.git
