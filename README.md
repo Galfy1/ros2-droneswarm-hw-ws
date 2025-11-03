@@ -153,7 +153,7 @@ A Typical command will look like this:
 - `./build_copy_start_on_pi.sh yes no no no`
 
 Before running this command, however, you will need to reinstall the QEMU for Docker Multi-platform builds. Otherwise, the build and copy will fail:
-    - `docker run --privileged --rm tonistiigi/binfmt --install all`
+- `docker run --privileged --rm tonistiigi/binfmt --install all`
 
 If you make any changes to the Dockerfile or docker-compose.yml file in the "ros2_in_docker_for_pi" folder, you need to:
 - Run the copy_ros2_os_to_pi.sh script.
