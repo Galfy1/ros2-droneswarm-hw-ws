@@ -11,7 +11,8 @@ def generate_launch_description():
         Node(
             package='droneswarm',
             namespace='drone',
-            executable='testy_node',
-            name='drone',
+            executable='tcp_camera_bridge_node',
+            name='tcp_camera_bridge_node',
+            output='screen',
         ),
     ])

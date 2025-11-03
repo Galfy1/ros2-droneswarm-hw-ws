@@ -25,7 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'testy_node = droneswarm.testy_node:main',
+            'tcp_camera_bridge_node = droneswarm.tcp_camera_bridge_node:main',
         ],
     },
 )
