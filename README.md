@@ -5,7 +5,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
 
 # Get Started (basic)
 1. Clone repo:
-    - `git clone {this repo}`
+    - `git clone --recursive {this repo}`
     - `cd ros2-droneswarm-hw-ws`
 1. Install dependencies (stand in /ros2-droneswarm-hw-ws):
     - `sudo apt update`
@@ -13,6 +13,14 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `source /opt/ros/humble/setup.bash`
     - `rosdep install -i --from-path src --rosdistro humble -y`
     - `python3 -m pip install -r requirements.txt `
+1. Setup some required packages for Ardupilot build environment (stand in /ros2-droneswarm-hw-ws):
+    - `cd /src/ardupilot`
+    - `Tools/environment_install/install-prereqs-ubuntu.sh -y`
+    - `. ~/.profile`
+1. Build MicroXRCEDDSGen (stand in /ros2-droneswarm-hw-ws):
+    -  `cd src/Micro-XRCE-DDS-Gen/`
+    -  `./gradlew assemble`
+    -  `echo "export PATH=\$PATH:$PWD/scripts" >> ~/.bashrc`
 1. Build ROS2 workspace (stand in /ros2-droneswarm-hw-ws):
     - `source /opt/ros/humble/setup.bash`
     - `colcon build --packages-up-to droneswarm`
