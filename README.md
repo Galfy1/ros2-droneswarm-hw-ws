@@ -187,6 +187,23 @@ For a list of general ROS2 packages, see:
     - (you can check/close the docker engine in the Windows system tray)
     - (if you had docker engine running in Windows before starting WSL, you need to close the docker engine, and then restart WSL using “WSL --shutdown”)
     - (you can check if your WSL is using Windows or Linux Docker Engine by typing “docker info” and looking for the “operating system” line. If it says “: Docker Desktop”, its using the Windows Docker Engine)
+- If you incounter failed "concon build ..." commands, , try increasing the WSL memory in the "WSL Settings" Windows app
+ 
+# Additional Setup for Gazebo Simulation
+If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.
+1. install some required Python packages
+    -  `sudo apt update`
+    -  `python3 -m pip install pexpect`
+1. Build Ardupilot SITL for ROS2 (stand in /ros2-droneswarm-hw-ws)
+    -  `source /opt/ros/humble/setup.bash`
+    -  `colcon build --packages-up-to ardupilot_sitl`
+1. Setup ROS2 with Gazebo
+    - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#install-gazebo and follow the **"Install Gazebo"** section.
+        - (when installing Gazebo Harmonic, its simplest to just follow the "Binary installation instructions" guide)
+        - IMPORTANT: when running the "wget https://packages.osrfoundation..." command you need "sudo" in front of it! else it might fail!
+1. Build ardupilot_gz_bringup (stand in /ros2-droneswarm-hw-ws)
+    - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#build-and-run-tests and follow the **"Build and Run Tests"** - but skip the test part!
+        - (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
 
 # Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
