@@ -191,7 +191,9 @@ For a list of general ROS2 packages, see:
  
 # Additional Setup for Gazebo Simulation
 If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.
-1. install some required Python packages
+1. Install ROS2 Humble
+    - Go to: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html and follow the **"Setup Sources"** and **"Install ROS 2 packages"** sections
+1. Install some required Python packages
     -  `sudo apt update`
     -  `python3 -m pip install pexpect`
 1. Build Ardupilot SITL for ROS2 (stand in /ros2-droneswarm-hw-ws)
@@ -200,7 +202,7 @@ If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional 
 1. Setup ROS2 with Gazebo
     - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#install-gazebo and follow the **"Install Gazebo"** section.
         - (when installing Gazebo Harmonic, its simplest to just follow the "Binary installation instructions" guide)
-        - IMPORTANT: when running the "wget https://packages.osrfoundation..." command you need "sudo" in front of it! else it might fail!
+        - IMPORTANT: when running the "`wget https://packages.osrfoundation...`" command you need "sudo" in front of it! else it might fail!
 1. Build ardupilot_gz_bringup (stand in /ros2-droneswarm-hw-ws)
     - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#build-and-run-tests and follow the **"Build and Run Tests"** - but skip the test part!
         - (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
