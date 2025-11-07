@@ -2,8 +2,8 @@
 	path = src/ardupilot
 	url = https://github.com/ArduPilot/ardupilot.git
 	branch = master
-[submodule "src/micro_ros_Agent"]
-	path = src/micro_ros_Agent
+[submodule "src/micro_ros_agent"]
+	path = src/micro_ros_agent
 	url = https://github.com/micro-ROS/micro-ROS-Agent.git
 	branch = humble
 [submodule "src/Micro-XRCE-DDS-Gen"]
