@@ -18,7 +18,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `sudo apt install python3-pip`
     - `python3 -m pip install -r requirements.txt `
 1. Setup some required packages for Ardupilot build environment (stand in /ros2-droneswarm-hw-ws):
-    - `cd /src/ardupilot`
+    - `cd src/ardupilot`
     - `Tools/environment_install/install-prereqs-ubuntu.sh -y`
     - `. ~/.profile`
 1. Build MicroXRCEDDSGen (stand in /ros2-droneswarm-hw-ws):
