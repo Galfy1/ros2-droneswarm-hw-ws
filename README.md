@@ -25,6 +25,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     -  `cd src/Micro-XRCE-DDS-Gen/`
     -  `./gradlew assemble`
     -  `echo "export PATH=\$PATH:$PWD/scripts" >> ~/.bashrc`
+    -  `source ~/.bashrc`
 1. Build packages (stand in /ros2-droneswarm-hw-ws):
     - `source /opt/ros/humble/setup.bash`
     - `colcon build --packages-up-to ardupilot_dds_tests`
