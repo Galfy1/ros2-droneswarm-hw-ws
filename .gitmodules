@@ -5,3 +5,7 @@
 [submodule "src/Micro-XRCE-DDS-Gen"]
 	path = src/Micro-XRCE-DDS-Gen
 	url = https://github.com/ardupilot/Micro-XRCE-DDS-Gen.git
+[submodule "src/micro_ros_agent"]
+	path = src/micro_ros_agent
+	url = https://github.com/micro-ROS/micro-ROS-Agent.git
+	branch = humble
