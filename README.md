@@ -206,13 +206,27 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
 1. Build Ardupilot SITL for ROS2 (stand in /ros2-droneswarm-hw-ws)
     -  `source /opt/ros/humble/setup.bash`
     -  `colcon build --packages-up-to ardupilot_sitl`
-1. Setup ROS2 with Gazebo
-    - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#install-gazebo and follow the **"Install Gazebo"** section.
-        - (when installing Gazebo Harmonic, its simplest to just follow the "Binary installation instructions" guide)
-        - IMPORTANT: when running the "`wget https://packages.osrfoundation...`" command you need "sudo" in front of it! else it might fail!
+1. Setup ROS2 with Gazebo (stand in /ros2-droneswarm-hw-ws)
+    1. Install Gazebo: https://gazebosim.org/docs/harmonic/install_ubuntu/
+    1.  Setup ROS2+Gazebo:
+        -  ```
+           vcs import --input https://raw.githubusercontent.com/ArduPilot/ardupilot_gz/main/ros2_gz.repos --recursive src
+           export GZ_VERSION=harmonic
+           sudo apt install wget
+           sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+           sudo apt update
+           sudo wget https://raw.githubusercontent.com/osrf/osrf-rosdep/master/gz/00-gazebo.list -O /etc/ros/rosdep/sources.list.d/00-gazebo.list
+           rosdep update
+           source /opt/ros/humble/setup.bash
+           sudo apt update
+           rosdep update
+           rosdep install --from-paths src --ignore-src -y
+           ```
 1. Build ardupilot_gz_bringup (stand in /ros2-droneswarm-hw-ws)
-    - Go to: https://ardupilot.org/dev/docs/ros2-gazebo.html#build-and-run-tests and follow the **"Build and Run Tests"** - but skip the test part!
-        - (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
+    -  `source /opt/ros/humble/setup.bash`
+    -  `colcon build --packages-up-to ardupilot_gz_bringup`
+    -  (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
 
 # Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
