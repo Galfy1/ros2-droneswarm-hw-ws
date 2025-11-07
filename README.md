@@ -12,6 +12,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `rosdep update`
     - `source /opt/ros/humble/setup.bash`
     - `rosdep install -i --from-path src --rosdistro humble -y`
+    - `sudo apt install python3-pip`
     - `python3 -m pip install -r requirements.txt `
 1. Setup some required packages for Ardupilot build environment (stand in /ros2-droneswarm-hw-ws):
     - `cd /src/ardupilot`
