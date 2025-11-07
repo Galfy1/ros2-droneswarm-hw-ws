@@ -7,8 +7,11 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
 1. Clone repo:
     - `git clone --recursive {this repo}`
     - `cd ros2-droneswarm-hw-ws`
+1. Install ROS2 Humble (if you don't already have it installed)
+    - Go to: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html and follow the **"Setup Sources"** and **"Install ROS 2 packages"** sections
 1. Install dependencies (stand in /ros2-droneswarm-hw-ws):
     - `sudo apt update`
+    - `sudo rosdep init`
     - `rosdep update`
     - `source /opt/ros/humble/setup.bash`
     - `rosdep install -i --from-path src --rosdistro humble -y`
@@ -26,7 +29,6 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `source /opt/ros/humble/setup.bash`
     - `colcon build --packages-up-to droneswarm`
   
-NOTE: If rosdep... outputs an error, you might need to call "sudo rosdep init" and try again
 
 ## How to Run / Launch
 1. Open a new terminal (never run/launch in the same terminal you build the workspace)
@@ -191,9 +193,9 @@ For a list of general ROS2 packages, see:
 - If you incounter failed "concon build ..." commands, , try increasing the WSL memory in the "WSL Settings" Windows app
  
 # Additional Setup for Gazebo Simulation
-If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.
-1. Install ROS2 Humble
-    - Go to: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html and follow the **"Setup Sources"** and **"Install ROS 2 packages"** sections
+If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.  
+It is assumed that you have followed [Get Started (basic)](#Get-Started-(basic)).
+
 1. Install some required Python packages
     -  `sudo apt update`
     -  `python3 -m pip install pexpect`
