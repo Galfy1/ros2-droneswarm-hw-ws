@@ -194,7 +194,7 @@ For a list of general ROS2 packages, see:
  
 # Additional Setup for Gazebo Simulation
 If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.  
-It is assumed that you have followed [Get Started (basic)](#Get-Started-(basic)).
+It is assumed that you have followed [Get Started (basic)](#get-started-basic).
 
 1. Install some required Python packages
     -  `sudo apt update`
