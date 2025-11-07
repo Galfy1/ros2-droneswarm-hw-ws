@@ -137,12 +137,19 @@ class CopterTakeoff(Node):
         # Set flag True if succesfully switched to guided mode:
         self.switched_to_guided = (result.status) or (result.curr_mode == COPTER_MODE_GUIDED)
 
-    def ardupilot_takeoff(self, alt):
+    # def ardupilot_takeoff(self, alt):
+    #     self.ardupilot_takeoff_complete = False
+    #     req = Takeoff.Request()
+    #     req.alt = alt
+    #     future = self.takeoff_client.call_async(req)
+    #     future = self.add_done_callback(self.ardupilot_takeoff_client_callback)
+
+    def ardupilot_takeoff(self, alt: float):
         self.ardupilot_takeoff_complete = False
         req = Takeoff.Request()
-        req.alt = alt
+        req.alt = float(alt)
         future = self.takeoff_client.call_async(req)
-        future = self.add_done_callback(self.ardupilot_takeoff_client_callback)
+        future.add_done_callback(self.ardupilot_takeoff_client_callback)
 
     def land(self):
         pass
@@ -193,7 +200,7 @@ class CopterTakeoff(Node):
         # (Not sure if ardupilot require using its "takeoff" service, before we can publish pos setpoints - or we if can publish pos directly after arming like on PX4
         # Just to make sure, we run an initial "ardupilot takeoff" command, to get in the air.)
         if not self.ardupilot_takeoff_complete:
-            self.ardupilot_takeoff(1) # 1 meter
+            self.ardupilot_takeoff(5.0) # 1 meter
             return
     
         # STEP 4: do whatever you want in your "application":

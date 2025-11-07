@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'tcp_camera_bridge_node = droneswarm.tcp_camera_bridge_node:main',
+            'copter_takeoff_example = droneswarm.copter_takeoff_example:main',
         ],
     },
 )
