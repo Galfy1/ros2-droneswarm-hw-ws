@@ -11,8 +11,8 @@ def generate_launch_description():
         Node(
             package='droneswarm',
             namespace='drone',
-            executable='copter_takeoff_example',
-            name='copter_takeoff_example',
+            executable='copter_controller_node',
+            name='copter_controller_node',
             output='screen',
         ),
     ])
