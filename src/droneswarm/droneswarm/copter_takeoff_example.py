@@ -300,6 +300,9 @@
 #         print(e)
 
 
+
+
+
 # """
 # Run takeoff test on Copter, then move to a GPS waypoint.
 
