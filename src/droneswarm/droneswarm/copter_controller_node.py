@@ -34,8 +34,9 @@ TAKEOFF_ALT = 5.0
 GRAYHOUND_TRACK = point.Point(latitude=-35.345996, longitude=149.159017, altitude=0.584)
 # CMAC = point.Point(latitude=-35.3627010, longitude=149.1651513, altitude=0.585)
 
-
-
+#temp
+STATE1 = 1
+STATE2 = 2
 
 class CopterControllerNode(Node):
 
@@ -106,14 +107,13 @@ class CopterControllerNode(Node):
         self._current_ap_status_flying = False
         
         # Updated by _ap_geopose_callback() from "/ap/geopose/filtered"
-        self._current_ap_geopose = GeoPose()
+        self._current_ap_geopose = GeoPose() # NOTE: Altitude in AMSL
 
-        self._current_geopose_goal = GeoPose() # altitude in this variable is in agl
-        self._start_altitude = 0.0 # Used for tracking altitude traversal. NOT to be confused with altitude of home location
+        self._current_geopose_goal = GeoPose() # NOTE: Altitude is saved in the OSD format - relative altitude above origin/home
+        self._origin_altitude = None
 
-        # This is something AP keeps track of. However, when using messages from the "/ap/goal_lla" topic, no target altitude is returned. Again, AP keeps track of this
-        # but does not provide this information. So if we want to keep track of the distance to the desired altitude, it is something we have to keep track of manually. 
-        self.home_geopose = GeoPose()
+        # temp
+        self.state = STATE1
 
 
     """ --- Service Methods  --- """
@@ -255,29 +255,30 @@ class CopterControllerNode(Node):
             self._current_ap_geopose = msg.pose
 
     # def _ap_geopoint_callback(self, msg: GeoPointStamped) -> None:
-        # Updates the goal position based on the coordinate command provided and manually updates the traget altitude since this is
-        # NOT provided through any topic.
+    #     # Updates the goal position based on the coordinate command provided and manually updates the traget altitude since this is
+    #     # NOT provided through any topic.
 
-        # stamp = msg.header.stamp
-        # if stamp.sec:
-        #     self._current_ap_goal.latitude = msg.position.latitude
-        #     self._current_ap_goal.longitude = msg.position.longitude
+    #     stamp = msg.header.stamp
+    #     if stamp.sec:
+    #         self._current_ap_goal.latitude = msg.position.latitude
+    #         self._current_ap_goal.longitude = msg.position.longitude
             
 
 
     """ --- Methods --- """
 
-    def _build_gps_pose_msg(self, lat: float, lon: float, agl_alt: float) -> GlobalPosition:
+    def _build_gps_pose_msg(self, lat: float, lon: float, alt_osd: float) -> GlobalPosition:
         """ 
         Builds geopose command message
         lat/lon - latetude and longitude of goal coordinates
-        alt - altitude in meters above terrain (AGL). 
+        alt - altitude in meters above origin (OSD). 
         """
+        
         goal_pos = GlobalPosition()
         goal_pos.latitude = lat
         goal_pos.longitude = lon
-        goal_pos.altitude = agl_alt # Absolute altitude above sea level AGL
-        goal_pos.coordinate_frame = FRAME_GLOBAL_TERRAIN_ALT # Altitude in AGL
+        goal_pos.altitude = alt_osd # Altitude relative to origin location
+        goal_pos.coordinate_frame = FRAME_GLOBAL_REL_ALT 
         goal_pos.header.frame_id = "map"
 
         goal_pos.type_mask = (
@@ -293,20 +294,23 @@ class CopterControllerNode(Node):
 
         return goal_pos
 
-    def _update_goal_pose(self, lat: float, lon: float, agl_alt: float) -> None:
-        
-        # current_pose = self._current_ap_geopose
-        # goal_a_alt = self._start_altitude + delta_alt
+    def set_origin_alt(self):
+        if self._origin_altitude is not None:
+            return 
 
-        if self._current_geopose_goal.position.latitude == lat and self._current_geopose_goal.position.longitude == lon and self._current_geopose_goal.position.altitude == agl_alt:
+        self._origin_altitude = self._current_ap_geopose.position.altitude
+        self.get_logger().info(f"Set origin altitude to: {self._origin_altitude}")
+
+    def _update_goal_pose(self, lat: float, lon: float, alt_osd: float) -> None:
+    
+
+        if self._current_geopose_goal.position.latitude == lat and self._current_geopose_goal.position.longitude == lon and self._current_geopose_goal.position.altitude == alt_osd:
             return
-
-        self._start_altitude = current_pose.position.altitude
 
         new_goal = GeoPose()
         new_goal.position.latitude = lat
         new_goal.position.longitude = lon
-        new_goal.position.altitude = delta_alt
+        new_goal.position.altitude = alt_osd
         self._current_geopose_goal = new_goal
 
         self.get_logger().info(
@@ -318,22 +322,19 @@ class CopterControllerNode(Node):
         )
     
 
-
-    def cmd_navigate_to(self, lat, lon, agl_alt = 0.0) -> None:
+    def cmd_navigate_to(self, lat, lon, alt_osd) -> None:
         # Copter must be in GUIDED mode
         if self._current_ap_status_mode != COPTER_MODE_GUIDED:
             raise RuntimeError(
                 f"Copter must be in GUIDED mode, but current mode is {self.current_ap_status_mode}"
             )
-
-        current_alt = self._current_ap_geopose.position.altitude
         
-        self._update_goal_pose(lat, lon, delta_alt)
+        self._update_goal_pose(lat, lon, alt_osd)
         
-        msg = self._build_gps_pose_msg(lat, lon, self._current_geopose_goal.position.altitude)
+        msg = self._build_gps_pose_msg(lat, lon, alt_osd)
         self._global_pos_pub.publish(msg)
 
-    def cmd_takeoff(self, delta_alt = 1.0) -> None:
+    def cmd_takeoff(self, alt_osd = 1.0) -> None:
         if self._current_ap_status_mode != COPTER_MODE_GUIDED:
             raise RuntimeError(
                 f"Copter must be in GUIDED mode, but current mode is {self.current_ap_status_mode}"
@@ -345,73 +346,37 @@ class CopterControllerNode(Node):
         lon = self._current_ap_geopose.position.longitude
         alt = self._current_ap_geopose.position.altitude
 
-        self._update_goal_pose(lat, lon, alt + delta_alt)
+        self._update_goal_pose(lat, lon, alt_osd)
 
-        self._takeoff_request(delta_alt)
+        self._takeoff_request(alt_osd)
         
-
-    def has_reached_goal(self, tolerance = 1.0):
+    def has_reached_goal(self, dist_tolerance = 1.0, alt_tolerance = 1.0) -> bool:
         # Copter must be in GUIDED mode
         if self._current_ap_status_mode != COPTER_MODE_GUIDED:
             raise RuntimeError(
                 f"Copter must be in GUIDED mode, but current mode is {self._current_ap_status_mode}"
             )
 
-        reached_goal = False
-
         current_goal_coor = (
             self._current_geopose_goal.position.latitude, 
             self._current_geopose_goal.position.longitude, 
-            self._current_geopose_goal.position.altitude
+            self._current_geopose_goal.position.altitude # OSD ALT
             )
         current_pose_coor = (
             self._current_ap_geopose.position.latitude, 
             self._current_ap_geopose.position.longitude, 
-            self._current_ap_geopose.position.altitude
+            self._current_ap_geopose.position.altitude - self._origin_altitude # AMSL ALT - ORIGIN ALT = OSD ALT
             )
-
-        print("goal: ", current_goal_coor[2])
-        print("current: ", current_pose_coor[2])
 
         flat_distance = distance.distance(current_goal_coor[:2], current_pose_coor[:2]).m
         alt_distance = abs(current_goal_coor[2] - current_pose_coor[2])
 
         print("Flat distance: ", flat_distance, ", Altitude distance: ", alt_distance)
 
-        # if reached_goal:
-        #     self.delta_alt = 0.0
-
-        # return reached_goal
-
-        
-
-    # def save_home_alt(self):
-    #     self.home_geopose = self.current_geopose
-    #     self.get_logger().info(
-    #         "Set home geopose to - Lat: {}, Lon: {}, Alt: {}".format(
-    #             self.home_geopose.position.latitude,
-    #             self.home_geopose.position.longitude,
-    #             self.home_geopose.position.altitude
-    #         )
-    #     )
-
-
-    # def get_distance_to_waypoint(self):
-    #     # Use 3D geopy distance calculation
-    #     # https://geopy.readthedocs.io/en/stable/#module-geopy.distance
-
-    #     current_goal = self._current_geopose_goal
-    #     current_posistion = self._current_geopose.position
-
-    #     p1 = (current_goal.latitude, current_goal.longitude, current_goal.altitude)
-    #     p2 = (current_posistion.latitude, current_posistion.longitude, current_posistion.altitude)
-
-    #     print("Current alt: ", p1[2], ", Goal alt: ", p2[2])
-
-    #     flat_distance = distance.distance(p1[:2], p2[:2]).m
-    #     alt_distance = abs(p2[2] - p1[2]) 
-    #     print(f"Flat distance to goal: ", flat_distance, ", Altitude disantce to goal: ", alt_distance)
-
+        if flat_distance < dist_tolerance and alt_distance < alt_tolerance:
+            return True
+        else:
+            return False
         
 
     """ --- Copter Control loop --- """
@@ -420,8 +385,7 @@ class CopterControllerNode(Node):
 
         try:
             
-            if not self._current_ap_status_flying:
-
+            if self.state == STATE1:
                 if not self._is_prearm_ok:
                     return
 
@@ -438,19 +402,64 @@ class CopterControllerNode(Node):
                 elif self._arming_in_progress:
                     return
 
-                # Save Home altitude. We do this because no topic provide target altitude from takeoff geopose commands so its something we have to keep track of ourselves
-                # self._save_home_alt()
+                if not self._current_ap_status_flying and not self._takeoff_in_progress:
 
-                if not self._current_ap_status_flying or self._takeoff_in_progress:
-                    self.cmd_takeoff(delta_alt = TAKEOFF_ALT)
+                    # Save origin altitude. We do this because no topic provide target altitude from takeoff geopose commands so its something we have to keep track of ourselves
+                    self.set_origin_alt()
 
-            elif self._current_ap_status_flying:
-                # self.cmd_navigate_to(
-                #     lat = GRAYHOUND_TRACK.latitude, 
-                #     lon = GRAYHOUND_TRACK.longitude, 
-                #     alt = 20.0)
+                    self.cmd_takeoff(alt_osd = TAKEOFF_ALT)
 
-                self.has_reached_goal()
+                if self.has_reached_goal():
+                    self.state = STATE2
+
+
+            elif self.state == STATE2:
+                
+                self.cmd_navigate_to(
+                    lat = GRAYHOUND_TRACK.latitude, 
+                    lon = GRAYHOUND_TRACK.longitude, 
+                    alt_osd = 20.0)
+
+                if self.has_reached_goal():
+                    print("GOAL REACHED")
+                
+
+
+            # if not self._current_ap_status_flying:
+
+            #     if not self._is_prearm_ok:
+            #         return
+
+            #     if not self._mode_switch_in_progress and self._current_ap_status_mode != COPTER_MODE_GUIDED:
+            #         self._switch_mode_request(COPTER_MODE_GUIDED)
+            #         return
+            #     elif self._mode_switch_in_progress:
+            #         return
+
+            #     # Start arming once prearm succeeds and mode switch completed
+            #     if not self._arming_in_progress and not self._current_ap_status_armed:
+            #         self._arm_request()
+            #         return
+            #     elif self._arming_in_progress:
+            #         return
+
+            #     if not self._current_ap_status_flying or self._takeoff_in_progress:
+
+            #         # Save origin altitude. We do this because no topic provide target altitude from takeoff geopose commands so its something we have to keep track of ourselves
+            #         self.set_origin_alt()
+
+            #         self.cmd_takeoff(alt_osd = TAKEOFF_ALT)
+
+            # elif self._current_ap_status_flying:
+
+            #     if self.has_reached_goal()
+
+            #     self.cmd_navigate_to(
+            #         lat = GRAYHOUND_TRACK.latitude, 
+            #         lon = GRAYHOUND_TRACK.longitude, 
+            #         alt = 20.0)
+
+                
                     
         except Exception as e:
             self.get_logger().error(f"Copter control loop error: {e}")
