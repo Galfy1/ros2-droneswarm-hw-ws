@@ -23,7 +23,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `. ~/.profile`
 1. Build MicroXRCEDDSGen (stand in /ros2-droneswarm-hw-ws):
     -  `cd src/Micro-XRCE-DDS-Gen/`
-    -  `./gradlew assemble`
+    -  `sudo ./gradlew assemble`
     -  `echo "export PATH=\$PATH:$PWD/scripts" >> ~/.bashrc`
     -  `source ~/.bashrc`
 1. Build packages (stand in /ros2-droneswarm-hw-ws):
