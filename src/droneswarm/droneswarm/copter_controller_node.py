@@ -16,10 +16,11 @@ from ardupilot_msgs.msg import GlobalPosition   # https://github.com/ArduPilot/a
 from geographic_msgs.msg import GeoPoseStamped  # https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_DDS/Idl/geographic_msgs/msg/GeoPoseStamped.idl
 from geographic_msgs.msg import GeoPose         # https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_DDS/Idl/geographic_msgs/msg/GeoPose.idl 
 from geometry_msgs.msg import TwistStamped      # https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_DDS/Idl/geometry_msgs/msg/TwistStamped.idl
+from our_custom_interfaces.msg import ObjectData
 
 from droneswarm.copter_mission_logic import CopterControllerFSM
-import droneswarm.common.constants as const
-import droneswarm.common.settings as setting
+import droneswarm.utility.constants as const
+import droneswarm.utility.settings as setting
 
 class CopterControllerNode(Node):
 
@@ -64,6 +65,7 @@ class CopterControllerNode(Node):
         # Subscribers
         self._ap_status_sub = self.create_subscription(Status, "/ap/status", self._ap_status_callback, qos_status_geopose)
         self._ap_geopose_sub = self.create_subscription(GeoPoseStamped, "/ap/geopose/filtered", self._ap_geopose_callback, qos_status_geopose) # This is the current estimated position of the vehicle, coming from ArduPilot’s EKF.
+        self._detection_sub = self.create_subscription(ObjectData, "/detections", self._detections_callback, qos_status_geopose)
 
         # Publishers
         self._global_pos_pub = self.create_publisher(GlobalPosition, "/ap/cmd_gps_pose", 1)
@@ -95,6 +97,9 @@ class CopterControllerNode(Node):
         self._desired_linear_vel = (0.0, 0.0, 0.0) # x, y, z
         self._desired_angular_vel = (0.0, 0.0, 0.0) # Roll, Pitch, Yaw
         self._vel_watchdog_counter = 0
+
+        # Newest detection from /detection topic
+        self.detection_filtered = ObjectData()
 
 
     """ --- Service Methods  --- """
@@ -229,6 +234,8 @@ class CopterControllerNode(Node):
         if stamp.sec:
             self._current_ap_geopose = msg.pose
 
+    def _detections_callback(self, msg: ObjectData) -> None:
+        
 
     """ --- Methods --- """
 

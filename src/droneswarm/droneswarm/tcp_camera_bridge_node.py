@@ -15,7 +15,7 @@ class TCPCameraBridgeNode(Node):
         super().__init__('tcp_camera_bridge_node')
         self.get_logger().info("TCP Camera Bridge Node started.")
 
-        self.publisher_ = self.create_publisher(ObjectData, 'detections', 10)
+        self.publisher = self.create_publisher(ObjectData, '/detections', 10)
 
         self.tcp_server = TCPServer(host=host, port=port)
         self.get_logger().info(f"Connecting to TCP server at {host}:{port}...")
@@ -50,7 +50,7 @@ class TCPCameraBridgeNode(Node):
                     ros_msg.err_x = msg_data.get('err_x')
                     ros_msg.err_y = msg_data.get('err_y')
 
-                    self.publisher_.publish(ros_msg) # Publish the ROS2 message
+                    self.publisher.publish(ros_msg) # Publish the ROS2 message
                     
             except Exception as e:
                 self.get_logger().error(f"Error: {e}")

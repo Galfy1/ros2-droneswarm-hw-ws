@@ -1,14 +1,39 @@
 #!/usr/bin/env python3
 
-import droneswarm.common.constants as const
-import droneswarm.common.settings as setting
+import droneswarm.utility.constants as const
+import droneswarm.utility.settings as setting
 import time
+
+from our_custom_interfaces.msg import ObjectData
 
 """
 The mission logic here is implemented using the State Design Pattern.
 https://refactoring.guru/design-patterns/state
 https://refactoring.guru/design-patterns/state/python/example
 """
+
+def normalize_detection(detection: ObjectData) -> tuple[float, float, float]:
+    """ Returns a normalized detection tuple based on image size and BBOX_EDGE_LENGTH """
+
+    err_x = float(detection.err_x)
+    err_y = float(detection.err_y)
+    bbox_w = float(detection.w)
+    bbox_h = float(detection.h)
+
+    # normalize to [-1, 1]
+    n_err_x = err_x / (const.IMAGE_WIDTH / 2.0)
+    n_err_y = err_y / (const.IMAGE_HEIGHT / 2.0)
+
+    avg_edge_size = (bbox_w + bbox_h) / 2.0
+
+    # normalise bounding box to a desired average edge length. If n_e_dist is > 0 then then UAV is to far. If < 0 then its too close.  
+    n_e_dist = (setting.BBOX_EDGE_LENGTH - avg_edge_size) / setting.BBOX_EDGE_LENGTH
+    n_e_dist = max(-2.0, min(2.0, n_e_dist))
+
+    return (n_err_x, n_err_y, n_e_dist)
+
+    
+
 
 """ --- State Interface --- """
 class State: 
@@ -56,7 +81,19 @@ class TakeoffState(State):
             node.cmd_takeoff(alt_osd = setting.TAKEOFF_ALT)
             return
         elif node.is_takeoff_complete():
-            self.context.transition_to(TestState())
+            self.context.transition_to(AwaitingDetectionState())
+
+class AwaitingDetectionState(State):
+    def run(self, node):
+        pass
+
+        self.context.transition_to(TrackingDetectionState())
+
+class TrackingDetectionState(State):
+    def run(self, node):
+        pass
+
+        self.context.transition_to(AwaitingDetectionState())
 
 class TestState(State):
     def __init__(self):
@@ -151,8 +188,6 @@ class TestState(State):
             node.get_logger().info("Velocity test sequence complete.")
 
  
-            
-        
 """ --- Context --- """
 class CopterControllerFSM: 
     def __init__(self):
@@ -168,129 +203,6 @@ class CopterControllerFSM:
     
     def step(self, node): # node passes the self reference when we call step in the copter_controller_node.
         self._current_state.run(node)
-
-
-# # Hard code some known locations
-# # Note - Altitude in geopy is in km!
-# GRAYHOUND_TRACK = point.Point(latitude=-35.355996, longitude=149.159017, altitude=0.584)
-# # CMAC = point.Point(latitude=-35.3627010, longitude=149.1651513, altitude=0.585)
-
-
-# # NOTE: temp
-# self.state = STATE1
-# self._vel_test_phase = 0
-# self._vel_test_phase_start = None
-
-# # NOTE: Temp
-# def start_phase(phase):
-#     self._vel_test_phase = phase
-#     self._vel_test_phase_start = time.time()
-
-
-# def copter_control_loop(node):
-
-#     if self.state == STATE1:
-#         if not self._is_prearm_ok:
-#             return
-
-#         if not self._mode_switch_in_progress and self._current_ap_status_mode != COPTER_MODE_GUIDED and self._internal_mode != INTERNAL_MODE_GUIDED_POS:
-#             self.switch_flight_mode(INTERNAL_MODE_GUIDED_POS)
-#             return
-#         elif self._mode_switch_in_progress:
-#             return
-
-#         # Start arming once prearm succeeds and mode switch completed
-#         if not self._arming_in_progress and not self._current_ap_status_armed:
-#             self._arm_request()
-#             return
-#         elif self._arming_in_progress:
-#             return
-
-#         if not self._current_ap_status_flying and not self._takeoff_in_progress:
-
-#             # Save origin altitude. We do this because no topic provide target altitude from takeoff geopose commands so its something we have to keep track of ourselves
-#             self.set_origin_alt()
-
-#             self.cmd_takeoff(alt_osd = TAKEOFF_ALT)
-
-#         if self.has_reached_goal():
-#             self.state = STATE2
-#             self.switch_flight_mode(INTERNAL_MODE_GUIDED_VEL)
-
-
-
-#     elif self.state == STATE2:
-        
-#         # On first entry into STATE2, initialize the test sequence
-#         if self._vel_test_phase_start is None:
-#             self.get_logger().info("Starting velocity test sequence...")
-#             self.start_phase(1)
-#             return
-
-#         # Each phase lasts 2 seconds
-#         elapsed = time.time() - self._vel_test_phase_start
-#         PHASE_DURATION = 4.0
-
-#         # Phase 1: Forward
-#         if self._vel_test_phase == 1:
-#             self.cmd_velocity((1.0, 0.0, 0.0), (0.0,0.0,0.0))  # forward
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(2)
-
-#         # Phase 2: Backward
-#         elif self._vel_test_phase == 2:
-#             self.cmd_velocity((-1.0, 0.0, 0.0), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(3)
-
-#         # Phase 3: Right
-#         elif self._vel_test_phase == 3:
-#             self.cmd_velocity((0.0, 1.0, 0.0), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(4)
-
-#         # Phase 4: Left
-#         elif self._vel_test_phase == 4:
-#             self.cmd_velocity((0.0, -1.0, 0.0), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(5)
-
-#         # Phase 5: Up (remember vz negative = climb)
-#         elif self._vel_test_phase == 5:
-#             self.cmd_velocity((0.0, 0.0, -0.5), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(6)
-
-#         # Phase 6: Down (vz positive = descend)
-#         elif self._vel_test_phase == 6:
-#             self.cmd_velocity((0.0, 0.0, 0.5), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(7)
-
-#         # Phase 7: Yaw clockwise
-#         elif self._vel_test_phase == 7:
-#             self.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,0.5))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(8)
-
-#         # Phase 8: Yaw counter-clockwise
-#         elif self._vel_test_phase == 8:
-#             self.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,-0.5))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(9)
-
-#         # Phase 9: Diagonal forward-right
-#         elif self._vel_test_phase == 9:
-#             self.cmd_velocity((0.7, 0.7, 0.0), (0.0,0.0,0.0))
-#             if elapsed > PHASE_DURATION:
-#                 self.start_phase(10)
-
-#         # Phase 10: Complete — stop motion
-#         elif self._vel_test_phase == 10:
-#             self.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,0.0))
-#             self.get_logger().info("Velocity test sequence complete.")
-#             # Optionally transition to next state:
-#             # self.state = STATE3
 
 
 
