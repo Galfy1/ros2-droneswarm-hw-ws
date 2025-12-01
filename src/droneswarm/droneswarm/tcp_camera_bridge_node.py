@@ -45,6 +45,7 @@ class TCPCameraBridgeNode(Node):
                         ros_msg.y = msg_data_box[1]
                         ros_msg.w = msg_data_box[2]
                         ros_msg.h = msg_data_box[3]
+                    ros_msg.valid = msg_data.get('valid')
                     ros_msg.category = msg_data.get('category')
                     ros_msg.confidence = msg_data.get('confidence')
                     ros_msg.err_x = msg_data.get('err_x')
