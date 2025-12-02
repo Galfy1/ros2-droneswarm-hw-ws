@@ -5,7 +5,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
 
 # Get Started (basic)
 1. Clone repo:
-    - `git clone --recursive {this repo}`
+    - `git clone --recursive https://github.com/Galfy1/ros2-droneswarm-hw-ws.git`
     - `cd ros2-droneswarm-hw-ws`
 1. Install ROS2 Humble (if you don't already have it installed)
     - Go to: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html and follow the **"Setup Sources"** and **"Install ROS 2 packages"** sections
