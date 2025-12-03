@@ -227,6 +227,17 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
     -  `source /opt/ros/humble/setup.bash`
     -  `colcon build --packages-up-to ardupilot_gz_bringup`
     -  (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
+  
+## How to Run / Launch a Single-UAV Simulation
+1. Open a new terminal (never run/launch in the same terminal you build the workspace)
+1. Source overlay:
+    - `cd {path to the workspace root}`
+    - `source install/setup.bash`
+1. Launch the simulations environment using ardupilot_gz_bringup:
+    - `ros2 launch ardupilot_gz_bringup iris_runway.launch.py`
+    - (feel free to use the other bring-up launch files for different copter and world setups)
+1. Run or Launch whatever you want. e.g.:
+    - `ros2 launch {package name} {launch file name}`
 
 # Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
