@@ -33,3 +33,9 @@ FRAME_GLOBAL_TERRAIN_ALT = 11
 # Pi AI Camera image size
 IMAGE_WIDTH = 640 # pixels
 IMAGE_HEIGHT = 480 # pixels
+
+
+# Constants for selecting tests or run programs
+RUN_PROGRAM = 1
+HOVER_TEST = 2
+VELEOCITY_TEST = 3

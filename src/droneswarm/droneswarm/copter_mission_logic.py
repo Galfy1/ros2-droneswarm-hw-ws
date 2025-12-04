@@ -4,35 +4,11 @@ import droneswarm.utility.constants as const
 import droneswarm.utility.settings as setting
 import time
 
-from our_custom_interfaces.msg import ObjectData
-
 """
 The mission logic here is implemented using the State Design Pattern.
 https://refactoring.guru/design-patterns/state
 https://refactoring.guru/design-patterns/state/python/example
 """
-
-def normalize_detection(detection: ObjectData) -> tuple[float, float, float]:
-    """ Returns a normalized detection tuple based on image size and BBOX_EDGE_LENGTH """
-
-    err_x = float(detection.err_x)
-    err_y = float(detection.err_y)
-    bbox_w = float(detection.w)
-    bbox_h = float(detection.h)
-
-    # normalize to [-1, 1]
-    n_err_x = err_x / (const.IMAGE_WIDTH / 2.0)
-    n_err_y = err_y / (const.IMAGE_HEIGHT / 2.0)
-
-    avg_edge_size = (bbox_w + bbox_h) / 2.0
-
-    # normalise bounding box to a desired average edge length. If n_e_dist is > 0 then then UAV is to far. If < 0 then its too close.  
-    n_e_dist = (setting.BBOX_EDGE_LENGTH - avg_edge_size) / setting.BBOX_EDGE_LENGTH
-    n_e_dist = max(-2.0, min(2.0, n_e_dist))
-
-    return (n_err_x, n_err_y, n_e_dist)
-
-    
 
 
 """ --- State Interface --- """
@@ -45,8 +21,12 @@ class State:
         self.context = context
 
     def run(self, node):
-        #  Override in subclasses. 'node' is the ROS2 node giving access to commands and telemetry.
+        #  Override in subclasses (Concrete states). 'node' is the ROS2 node giving access to commands and telemetry.
         raise NotImplementedError("State has not been implemented")
+
+    def on_enter(self):
+        #  Override in subclasses (Concrete states), but only if needed. This method is not required but optional!
+        pass
 
 
 """ --- Concrete states --- """
@@ -81,21 +61,110 @@ class TakeoffState(State):
             node.cmd_takeoff(alt_osd = setting.TAKEOFF_ALT)
             return
         elif node.is_takeoff_complete():
+            self.context.transition_to(TestOrRunState())
+
+class TestOrRunState(State):
+    def run(self, node):
+        if setting.PROGRAM_SELECT == const.RUN_PROGRAM:
             self.context.transition_to(AwaitingDetectionState())
+        elif setting.PROGRAM_SELECT == const.HOVER_TEST:
+            self.context.transition_to(HoverTestState())
+        elif setting.PROGRAM_SELECT == const.VELEOCITY_TEST:
+            self.context.transition_to(VelocityTestState())
+        else:
+            raise RuntimeError(
+                f"Selected program does not exist"
+            )
 
 class AwaitingDetectionState(State):
-    def run(self, node):
-        pass
+    def __init__(self):
+        self.detect_counter = 0
+        self.first_valid_time = None
 
-        self.context.transition_to(TrackingDetectionState())
+    def run(self, node):
+        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
+            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
+            return
+        elif node.mode_switch_in_progress:
+            return
+        
+        # Hover while waiting
+        node.cmd_velocity((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)) 
+
+        # Detection logic
+        if node.have_detection:
+
+            if self.detect_counter == 0:
+                self.first_valid_time = time.perf_counter()
+
+            self.detect_counter += 1
+            time_valid = time.perf_counter() - self.first_valid_time
+
+            if self.detect_counter >= setting.MIN_CONSECUTIVE_DETECTIONS and time_valid >= setting.DETECTION_CONFIRMATION_TIME:
+                self.context.transition_to(TrackingDetectionState())
+                return
+
+        else:
+            # Reset confirmation on dropout
+            self.detect_counter = 0
+            self.first_valid_time = None
+
 
 class TrackingDetectionState(State):
     def run(self, node):
-        pass
+        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
+            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
+            return
+        elif node.mode_switch_in_progress:
+            return
+
+        
 
         self.context.transition_to(AwaitingDetectionState())
 
-class TestState(State):
+class ReturnToLaunchCoordState(State):
+    def run(self, node):
+        node.switch_flight_mode(const.INTERNAL_MODE_RTL)
+        
+        if node.has_reached_goal():
+            self.context.transition_to(LandingState())
+
+class LandingState(State):
+    def run(self, node):
+        node.switch_flight_mode(const.INTERNAL_MODE_LAND)
+        if not node.current_ap_status_flying:
+            self.context.transition_to(FinishedState())
+
+class FinishedState(State):
+    def run(self, node):
+        # A state for doing nothing when landed
+        pass
+
+class HoverTestState(State):
+    def __init__(self):
+        self.entry_time = None
+        self.hover_duration = 30.0 # seconds
+
+    def on_enter(self):
+        self.entry_time = time.perf_counter()
+
+    def run(self, node):
+        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
+            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
+            return
+        elif node.mode_switch_in_progress:
+            return
+        
+        node.cmd_velocity((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)) 
+
+        current_time = time.perf_counter()
+        elapsed_time = current_time - self.entry_time
+
+        if elapsed_time >= self.hover_duration:
+            self.context.transition_to(LandingState())
+
+
+class VelocityTestState(State):
     def __init__(self):
         self._vel_test_phase = 0 
         self._vel_test_phase_start = None
@@ -106,15 +175,14 @@ class TestState(State):
 
     def run(self, node):
 
-        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
-            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
-            return
-        elif node.mode_switch_in_progress:
-            return
-
         # On first entry into the state, initialize the test sequence
         if self._vel_test_phase_start is None:
-            node.get_logger().info("Starting velocity test sequence...")
+
+            if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
+                node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
+                return
+            elif node.mode_switch_in_progress:
+                return
             self.start_phase(1)
             return
 
@@ -124,7 +192,7 @@ class TestState(State):
 
         # Phase 1: Forward
         if self._vel_test_phase == 1:
-            node.cmd_velocity((1.0, 0.0, 0.0), (0.0,0.0,0.0))  # forward
+            node.cmd_velocity((1.0, 0.0, 0.0), (0.0,0.0,0.0)) 
             if elapsed > PHASE_DURATION:
                 self.start_phase(2)
 
@@ -184,8 +252,10 @@ class TestState(State):
 
         # Phase 10: Complete — stop motion
         elif self._vel_test_phase == 11:
-            node.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,0.0))
-            node.get_logger().info("Velocity test sequence complete.")
+            self.context.transition_to(ReturnToLaunchCoordState())
+
+            # node.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,0.0))
+            # node.get_logger().info("Velocity test sequence complete.")
 
  
 """ --- Context --- """
@@ -199,6 +269,7 @@ class CopterControllerFSM:
         # Change the current state, and update the state's backreference.
         self._current_state = state # Update current state
         self._current_state.set_context(self) # update the current states back reference
+        self._current_state.on_enter()
 
     
     def step(self, node): # node passes the self reference when we call step in the copter_controller_node.

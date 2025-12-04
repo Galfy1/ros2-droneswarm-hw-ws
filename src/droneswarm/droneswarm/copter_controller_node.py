@@ -19,6 +19,8 @@ from geometry_msgs.msg import TwistStamped      # https://github.com/ArduPilot/a
 from our_custom_interfaces.msg import ObjectData
 
 from droneswarm.copter_mission_logic import CopterControllerFSM
+from droneswarm.utility.ema_filter import EMAFilter
+from droneswarm.utility.detections_normalizer import normalize_detection #NOTE: Needs updating
 import droneswarm.utility.constants as const
 import droneswarm.utility.settings as setting
 
@@ -98,8 +100,20 @@ class CopterControllerNode(Node):
         self._desired_angular_vel = (0.0, 0.0, 0.0) # Roll, Pitch, Yaw
         self._vel_watchdog_counter = 0
 
-        # Newest detection from /detection topic
-        self.detection_filtered = ObjectData()
+        # Dectecions error filters
+        err_x_filter = EMAFilter(alpha = setting.ERR_X_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the x-axis.
+        err_y_filter = EMAFilter(alpha = setting.ERR_Y_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the y-axis.
+        w_filter = EMAFilter(alpha = setting.BBOX_W_EMA_APLHA)       # Pixel size of bounding box width edge
+        h_filter = EMAFilter(alpha = setting.BBOX_H_EMA_APLHA)       # Pixel size of bounding box height edge
+
+        # Newest detection data from PI OS node - Updated by the _detections_callback()
+        self.have_detection = False
+        self.filtered_err_x = 0.0
+        self.filtered_err_y = 0.0
+        self.filtered_err_bbox_w = 0.0
+        self.filtered_err_bbox_h = 0.0
+        self.last_detection_time = time.perf_counter()
+        
 
 
     """ --- Service Methods  --- """
@@ -235,7 +249,18 @@ class CopterControllerNode(Node):
             self._current_ap_geopose = msg.pose
 
     def _detections_callback(self, msg: ObjectData) -> None:
-        
+        if msg.valid:
+            self.have_detection = True
+            self.last_detection_time = time.perf_counter() # Used for grace period 
+
+            self.filtered_err_x = err_x_filter(msg.err_x)
+            self.filtered_err_y = err_y_filter(msg.err_y)
+            self.filtered_err_bbox_w = w_filter(msg.w)
+            self.filtered_err_bbox_h = h_filter(msg.h)
+            
+        else:
+            self.have_detection = False
+
 
     """ --- Methods --- """
 
@@ -356,6 +381,9 @@ class CopterControllerNode(Node):
             const.INTERNAL_MODE_LAND,
         ):
             self.internal_mode = internal_mode
+            if self._vel_stream_loop_timer is not None:
+                self._vel_stream_loop_timer.cancel()
+                self._vel_stream_loop_timer = None
             return
 
     def arm(self) -> None:
@@ -456,10 +484,10 @@ class CopterControllerNode(Node):
         self._reset_vel_cmd_watchdog()
 
     def has_reached_goal(self, dist_tolerance = 1.0, alt_tolerance = 1.0) -> bool:
-        # Copter must be in GUIDED mode
-        if self.current_ap_status_mode != const.COPTER_MODE_GUIDED:
+        # Copter must be in GUIDED or RTL mode
+        if self.current_ap_status_mode not in [const.COPTER_MODE_GUIDED, const.COPTER_MODE_RTL]:
             raise RuntimeError(
-                f"Copter must be in GUIDED mode, but current mode is {self.current_ap_status_mode}"
+                f"Copter must be in GUIDED or RTL mode, but current mode is {self.current_ap_status_mode}"
             )
 
         current_goal_coor = (
