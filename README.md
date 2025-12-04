@@ -235,6 +235,8 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
     - (feel free to use the other bring-up launch files for different copter and world setups)
 1. Run or Launch whatever you want. e.g.:
     - `ros2 launch {package name} {launch file name}`
+  
+NOTE: If you use WSL, ROS2 topics might not work correctly unless you set the WSL Networking Mode to "None" (within the Windows WSL Settings app)... for some reason...
 
 # Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
