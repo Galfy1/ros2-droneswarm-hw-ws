@@ -10,7 +10,7 @@ services:
       - "/dev/ttyS0"
     restart: always # always restart the container if it stops (i.e. also on reboot) (in this "restart", state is remebered)
     network_mode: host
-    command: tail -f /dev/null # keeps docker container running without doing anything. (else it would exit immediately cus there are running task to do)
+    command: tail -f /dev/null # keeps docker container running without doing anything. (else it would exit immediately cus there are running no task to do)
                               # (we are launching our ros2 nodes manually from build_copy_run_on_pi.sh - this allows us to control when they start)
                               # (this allows us to update the /install files for the nodes, install dependencies, etc before starting the nodes.)
     # command: bash -c "
