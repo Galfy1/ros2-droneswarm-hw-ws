@@ -225,6 +225,8 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
     -  `colcon build --packages-up-to ardupilot_gz_bringup`
     -  (if colcon build fails... simply try again. If it still fails, and you use WSL, try increasing the WSL memory in the "WSL Settings" Windows app)
   
+*NOTE: If you use WSL, ROS2 topics might not work correctly unless you set the WSL Networking Mode to "None" (within the Windows WSL Settings app)... for some reason...*
+  
 ## How to Run / Launch a Single-UAV Simulation
 1. Open a new terminal (never run/launch in the same terminal you build the workspace)
 1. Source overlay:
@@ -236,7 +238,6 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
 1. Run or Launch whatever you want. e.g.:
     - `ros2 launch {package name} {launch file name}`
   
-NOTE: If you use WSL, ROS2 topics might not work correctly unless you set the WSL Networking Mode to "None" (within the Windows WSL Settings app)... for some reason...
 
 # Miscellaneous Notes
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
