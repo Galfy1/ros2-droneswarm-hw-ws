@@ -77,7 +77,6 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
 1. Setup Pi to auto start ROS2 nodes:
     - SSH into the pi using:
         - `ssh raspberrypi.local`
-    - (In the following scripts, remember to replace `<pi_username\>` with the username of the Pi)
     - Create a systemd service to auto start the Micro ROS Agent and the droneswarm (place the following content in each file):
         - `mkdir -p ~/.config/systemd/user`
         - `nano ~/.config/systemd/user/micro-ros-agent.service`
@@ -88,9 +87,9 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
               Wants=network-online.target
 
               [Service]
-              WorkingDirectory=/home/<pi_username>
+              WorkingDirectory=/home/devboard
               Type=simple
-              ExecStart=/home/<pi_username>/.local/lib/start-micro-ros-agent.sh
+              ExecStart=/home/devboard/.local/lib/start-micro-ros-agent.sh
               Restart=on-failure
 
               [Install]
@@ -104,9 +103,9 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
               Wants=network-online.target
 
               [Service]
-              WorkingDirectory=/home/<pi_username>
+              WorkingDirectory=/home/devboard
               Type=simple
-              ExecStart=/home/<pi_username>/.local/lib/start-our-ws.sh
+              ExecStart=/home/devboard/.local/lib/start-our-ws.sh
               Restart=on-failure
 
               [Install]
@@ -155,6 +154,16 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
           ```
     - Because systemctl user services won’t start until someone logs in, enable linger for login:
         - `loginctl enable-linger $USER`
+1. Make sure serial port is enabled:
+   - SSH into the pi using:
+        - `ssh raspberrypi.local`
+    - Open config tool (works in headless also):
+        - `sudo raspi-config`
+    - in the utility, select "Interfacing Options" --> "Serial":
+        - When prompted, select "no" to “Would you like a login shell to be accessible over serial?”
+        - When prompted, select "yes" to “Would you like the serial port hardware to be enabled?”.
+    - Now, Reboot the Pi.
+ 
 
 ## How to update the Pi when you change the source code?
 Simply run ./build_copy_start_on_pi.sh with your desired yes/no flag options:
