@@ -26,6 +26,10 @@ BBOX_W_EMA_APLHA = 0.15
 BBOX_H_EMA_APLHA = 0.15
 
 
-# Detection settings - Settings for when the drone belive a real detection has occured and starts tracking.
+# Detection settings
+# Settings for when the drone belive a real detection has occured and starts tracking.
 MIN_CONSECUTIVE_DETECTIONS = 3          # Number of consecutive detections
 DETECTION_CONFIRMATION_TIME = 0.25      # Seconds from first detection
+# Settings for when the drone belive the object is lost and goes back to searching.
+MAX_CONSECUTIVE_MISSED_DETECTIONS = 5   # Number of consecutive missed detections
+DETECTION_LOST_TIME = 0.5               # Seconds from last detection

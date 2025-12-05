@@ -109,8 +109,11 @@ class AwaitingDetectionState(State):
             self.detect_counter = 0
             self.first_valid_time = None
 
-
 class TrackingDetectionState(State):
+    def __init__(self):
+        self.missed_detect_counter = 0 # Counter for lost detections
+        # Timer for lost detections are handled by detections callback in copter_controller_node.py
+
     def run(self, node):
         if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
             node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
@@ -118,9 +121,14 @@ class TrackingDetectionState(State):
         elif node.mode_switch_in_progress:
             return
 
+        if node.have_detection:
+            self.missed_detect_counter = 0
+        else:
+            self.missed_detect_counter += 1
         
-
-        self.context.transition_to(AwaitingDetectionState())
+        elapsed_since_last_detection = time.perf_counter() - node.last_detection_time 
+        if elapsed_since_last_detection >= setting.DETECTION_LOST_TIME and self.missed_detect_counter >= setting.MAX_CONSECUTIVE_MISSED_DETECTIONS: 
+            self.context.transition_to(AwaitingDetectionState())
 
 class ReturnToLaunchCoordState(State):
     def run(self, node):
