@@ -33,3 +33,5 @@ DETECTION_CONFIRMATION_TIME = 0.25      # Seconds from first detection
 # Settings for when the drone belive the object is lost and goes back to searching.
 MAX_CONSECUTIVE_MISSED_DETECTIONS = 5   # Number of consecutive missed detections
 DETECTION_LOST_TIME = 0.5               # Seconds from last detection
+
+DETECTION_PHASE_TIMEOUT = 180.0         # Seconds before before completing the detection phase

@@ -4,6 +4,9 @@ import droneswarm.utility.constants as const
 import droneswarm.utility.settings as setting
 import time
 
+from droneswarm.utility.detections_normalizer import normalize_detection 
+from droneswarm.utility.pid_controller import PID
+
 """
 The mission logic here is implemented using the State Design Pattern.
 https://refactoring.guru/design-patterns/state
@@ -15,10 +18,16 @@ https://refactoring.guru/design-patterns/state/python/example
 class State: 
 
     def __init__(self):
-        self.context = None # States backreference to the context
+        self.context = None  # ONLY by top-level states - back reference to the context
+        self.parent = None   # ONLY inside composites for substates
 
     def set_context(self, context):
+        # ONLY by top-level states - back reference to the context
         self.context = context
+
+    def set_parent(self, parent): 
+        # ONLY inside composites for substates
+        self.parent = parent
 
     def run(self, node):
         #  Override in subclasses (Concrete states). 'node' is the ROS2 node giving access to commands and telemetry.
@@ -27,7 +36,6 @@ class State:
     def on_enter(self):
         #  Override in subclasses (Concrete states), but only if needed. This method is not required but optional!
         pass
-
 
 """ --- Concrete states --- """
 class PreArmState(State):
@@ -66,7 +74,7 @@ class TakeoffState(State):
 class TestOrRunState(State):
     def run(self, node):
         if setting.PROGRAM_SELECT == const.RUN_PROGRAM:
-            self.context.transition_to(AwaitingDetectionState())
+            self.context.transition_to(DetectionTrackingCompositeState())
         elif setting.PROGRAM_SELECT == const.HOVER_TEST:
             self.context.transition_to(HoverTestState())
         elif setting.PROGRAM_SELECT == const.VELEOCITY_TEST:
@@ -75,60 +83,6 @@ class TestOrRunState(State):
             raise RuntimeError(
                 f"Selected program does not exist"
             )
-
-class AwaitingDetectionState(State):
-    def __init__(self):
-        self.detect_counter = 0
-        self.first_valid_time = None
-
-    def run(self, node):
-        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
-            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
-            return
-        elif node.mode_switch_in_progress:
-            return
-        
-        # Hover while waiting
-        node.cmd_velocity((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)) 
-
-        # Detection logic
-        if node.have_detection:
-
-            if self.detect_counter == 0:
-                self.first_valid_time = time.perf_counter()
-
-            self.detect_counter += 1
-            time_valid = time.perf_counter() - self.first_valid_time
-
-            if self.detect_counter >= setting.MIN_CONSECUTIVE_DETECTIONS and time_valid >= setting.DETECTION_CONFIRMATION_TIME:
-                self.context.transition_to(TrackingDetectionState())
-                return
-
-        else:
-            # Reset confirmation on dropout
-            self.detect_counter = 0
-            self.first_valid_time = None
-
-class TrackingDetectionState(State):
-    def __init__(self):
-        self.missed_detect_counter = 0 # Counter for lost detections
-        # Timer for lost detections are handled by detections callback in copter_controller_node.py
-
-    def run(self, node):
-        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
-            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
-            return
-        elif node.mode_switch_in_progress:
-            return
-
-        if node.have_detection:
-            self.missed_detect_counter = 0
-        else:
-            self.missed_detect_counter += 1
-        
-        elapsed_since_last_detection = time.perf_counter() - node.last_detection_time 
-        if elapsed_since_last_detection >= setting.DETECTION_LOST_TIME and self.missed_detect_counter >= setting.MAX_CONSECUTIVE_MISSED_DETECTIONS: 
-            self.context.transition_to(AwaitingDetectionState())
 
 class ReturnToLaunchCoordState(State):
     def run(self, node):
@@ -150,6 +104,7 @@ class FinishedState(State):
 
 class HoverTestState(State):
     def __init__(self):
+        super().__init__()
         self.entry_time = None
         self.hover_duration = 30.0 # seconds
 
@@ -171,9 +126,9 @@ class HoverTestState(State):
         if elapsed_time >= self.hover_duration:
             self.context.transition_to(LandingState())
 
-
 class VelocityTestState(State):
     def __init__(self):
+        super().__init__()
         self._vel_test_phase = 0 
         self._vel_test_phase_start = None
 
@@ -265,10 +220,119 @@ class VelocityTestState(State):
             # node.cmd_velocity((0.0,0.0,0.0), (0.0,0.0,0.0))
             # node.get_logger().info("Velocity test sequence complete.")
 
+""" --- Composite substates for detection tracking --- """
+class AwaitingDetectionSubstate(State):
+    def __init__(self):
+        super().__init__()
+        self.detect_counter = 0
+        self.first_valid_time = None
+
+    def run(self, node):
+
+        # Hover while waiting
+        node.cmd_velocity((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)) 
+
+        # Detection logic
+        if node.have_detection:
+
+            if self.detect_counter == 0:
+                self.first_valid_time = time.perf_counter()
+
+            self.detect_counter += 1
+            time_valid = time.perf_counter() - self.first_valid_time
+
+            if self.detect_counter >= setting.MIN_CONSECUTIVE_DETECTIONS and time_valid >= setting.DETECTION_CONFIRMATION_TIME:
+                self.parent.transition_to_sub(TrackingDetectionSubstate())
+                return
+
+        else:
+            # Reset confirmation on dropout
+            self.detect_counter = 0
+            self.first_valid_time = None
+
+class TrackingDetectionSubstate(State):
+    def __init__(self):
+        super().__init__()
+        self.missed_detect_counter = 0 # Counter for lost detections
+        # Timer for lost detections are handled by detections callback in copter_controller_node.py
+
+        self.pid_x = PID(kp=1.0, ki=0.0, kd=0.1)
+        self.pid_y = PID(kp=1.0, ki=0.0, kd=0.1)
+        self.pid_z = PID(kp=1.0, ki=0.0, kd=0.1)
+
+
+    def run(self, node):
+ 
+        # Detection lost logic
+        if node.have_detection:
+            self.missed_detect_counter = 0
+        else:
+            self.missed_detect_counter += 1
+        
+        elapsed_since_last_detection = time.perf_counter() - node.last_detection_time 
+        if elapsed_since_last_detection >= setting.DETECTION_LOST_TIME and self.missed_detect_counter >= setting.MAX_CONSECUTIVE_MISSED_DETECTIONS: 
+            self.parent.transition_to_sub(AwaitingDetectionSubstate())
+            return
+
+        # Control logic to follow the detected object
+        n_err_x, n_err_y, n_edge_dist = normalize_detection(
+            node.filtered_err_x, 
+            node.filtered_err_y,
+            node.filtered_bbox_w,
+            node.filtered_bbox_h
+        )
+
+        vx = self.pid_x.update(n_err_x, setting.COPTER_CONTROL_LOOP_DT)
+        vy = self.pid_y.update(n_err_y, setting.COPTER_CONTROL_LOOP_DT)
+        vz = self.pid_z.update(n_edge_dist, setting.COPTER_CONTROL_LOOP_DT)
+
+        node.cmd_velocity((vx, vy, vz), (0.0, 0.0, 0.0))
+
+
+    
+
+""" --- Composite state --- """
+class DetectionTrackingCompositeState(State):
+    def __init__(self):
+        super().__init__()
+        initial_substate = AwaitingDetectionSubstate()
+        self._substate = None
+        self.enter_time = None
+
+        self.transition_to_sub(initial_substate)
+        
+    def on_enter(self):
+        self.enter_time = time.perf_counter() # Used for the composite exit condition
+        self._substate.on_enter() # Call substate on_enter method if any - Not the same as this on_enter!
+
+    def transition_to_sub(self, new_substate):
+        self._substate = new_substate
+        self._substate.set_parent(self) # Set the substate's backreference to this composite state
+        self._substate.set_context(self.context) # Set the substate's backreference to the overall context
+        self._substate.on_enter()
+
+    def run(self, node):
+
+        if not node.mode_switch_in_progress and (node.current_ap_status_mode != const.COPTER_MODE_GUIDED or node.internal_mode != const.INTERNAL_MODE_GUIDED_VEL):
+            node.switch_flight_mode(const.INTERNAL_MODE_GUIDED_VEL)
+            return
+        elif node.mode_switch_in_progress:
+            return
+
+        # Shared exit condition for composite state
+        elapsed = time.perf_counter() - self.enter_time
+        if elapsed >= setting.DETECTION_PHASE_TIMEOUT:  
+            self.context.transition_to(ReturnToLaunchCoordState())
+            return
+
+        # Continue executing in the current substate 
+        self._substate.run(node)
+
  
 """ --- Context --- """
 class CopterControllerFSM: 
     def __init__(self):
+        super().__init__()
         initial_state = PreArmState()
         self._current_state = None
         self.transition_to(initial_state)

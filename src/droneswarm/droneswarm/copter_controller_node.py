@@ -20,7 +20,6 @@ from our_custom_interfaces.msg import ObjectData
 
 from droneswarm.copter_mission_logic import CopterControllerFSM
 from droneswarm.utility.ema_filter import EMAFilter
-from droneswarm.utility.detections_normalizer import normalize_detection #NOTE: Needs updating
 import droneswarm.utility.constants as const
 import droneswarm.utility.settings as setting
 
@@ -110,8 +109,8 @@ class CopterControllerNode(Node):
         self.have_detection = False
         self.filtered_err_x = 0.0
         self.filtered_err_y = 0.0
-        self.filtered_err_bbox_w = 0.0
-        self.filtered_err_bbox_h = 0.0
+        self.filtered_bbox_w = 0.0
+        self.filtered_bbox_h = 0.0
         self.last_detection_time = time.perf_counter()
         
 
@@ -255,8 +254,8 @@ class CopterControllerNode(Node):
 
             self.filtered_err_x = err_x_filter(msg.err_x)
             self.filtered_err_y = err_y_filter(msg.err_y)
-            self.filtered_err_bbox_w = w_filter(msg.w)
-            self.filtered_err_bbox_h = h_filter(msg.h)
+            self.filtered_bbox_w = w_filter(msg.w)
+            self.filtered_bbox_h = h_filter(msg.h)
             
         else:
             self.have_detection = False
