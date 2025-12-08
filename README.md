@@ -76,7 +76,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
         - `./build_copy_start_on_pi.sh yes yes yes no`
 1. Setup Pi to auto start ROS2 nodes:
     - SSH into the pi using:
-        - `ssh raspberrypi.local`
+        - `ssh devboard@raspberrypi.local`
     - Create a systemd service to auto start the Micro ROS Agent and the droneswarm (place the following content in each file):
         - `mkdir -p ~/.config/systemd/user`
         - `nano ~/.config/systemd/user/micro-ros-agent.service`
@@ -156,7 +156,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
         - `loginctl enable-linger $USER`
 1. Make sure serial port is enabled:
    - SSH into the pi using:
-        - `ssh raspberrypi.local`
+        - `ssh devboard@raspberrypi.local`
     - Open config tool (works in headless also):
         - `sudo raspi-config`
     - in the utility, select "Interfacing Options" --> "Serial":
@@ -165,7 +165,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - Now, Reboot the Pi.
 1. Setup Pi AI Cam drivers/tcp_publisher on Pi (not within its docker)
     - SSH into the pi using:
-        - `ssh raspberrypi.local`
+        - `ssh devboard@raspberrypi.local`
     - Clone the source code:
         - `git clone https://github.com/alroe19/droneswarm_host_side.git`
         - `cd droneswarm_host_side`
