@@ -16,55 +16,55 @@ class PID():
         self.first = True
 
 
-def update(self, error, dt):
+    def update(self, error, dt):
 
-    # Proportional
-    proportional = self.kp * error
+        # Proportional
+        proportional = self.kp * error
 
-    # Derivative
-    if self.first:
-        derivative = 0.0
-        self.first = False
-    else:
-        derivative = (error - self.prev_error) / dt
+        # Derivative
+        if self.first:
+            derivative = 0.0
+            self.first = False
+        else:
+            derivative = (error - self.prev_error) / dt
 
-    if self.kd != 0.0:
+        if self.kd != 0.0:
 
-        # Proposed integral
-        proposed_integral = self.integral + error * dt
+            # Proposed integral
+            proposed_integral = self.integral + error * dt
 
-        # Proposed output BEFORE clamping
-        raw_output_proposed = proportional + self.ki * proposed_integral + derivative * self.kd
+            # Proposed output BEFORE clamping
+            raw_output_proposed = proportional + self.ki * proposed_integral + derivative * self.kd
 
-        # Check for saturation
-        is_saturated = (
-            raw_output_proposed > self.output_limit_max or
-            raw_output_proposed < self.output_limit_min
-        )
+            # Check for saturation
+            is_saturated = (
+                raw_output_proposed > self.output_limit_max or
+                raw_output_proposed < self.output_limit_min
+            )
 
-        # Check if input error is pushing output further into saturation? 
-        pushing_further = (
-            (raw_output_proposed > self.output_limit_max and error > 0) or
-            (raw_output_proposed < self.output_limit_min and error < 0)
-        )
+            # Check if input error is pushing output further into saturation? 
+            pushing_further = (
+                (raw_output_proposed > self.output_limit_max and error > 0) or
+                (raw_output_proposed < self.output_limit_min and error < 0)
+            )
 
-        # Integrator clamping (anti-windup)
-        if not (is_saturated and pushing_further):
-            self.integral = proposed_integral
+            # Integrator clamping (anti-windup)
+            if not (is_saturated and pushing_further):
+                self.integral = proposed_integral
 
-        # Now compute ACTUAL output using final integral
-        raw_output = proportional + self.ki * self.integral + derivative * self.kd
+            # Now compute ACTUAL output using final integral
+            raw_output = proportional + self.ki * self.integral + derivative * self.kd
 
-        # Clamp output
-        output = max(min(raw_output, self.output_limit_max), self.output_limit_min)
+            # Clamp output
+            output = max(min(raw_output, self.output_limit_max), self.output_limit_min)
 
-    else:
-        # No integral term
-        raw_output = proportional + derivative * self.kd
-        output = max(min(raw_output, self.output_limit_max), self.output_limit_min)
+        else:
+            # No integral term
+            raw_output = proportional + derivative * self.kd
+            output = max(min(raw_output, self.output_limit_max), self.output_limit_min)
 
-    self.prev_error = error
-    return output
+        self.prev_error = error
+        return output
 
 
 

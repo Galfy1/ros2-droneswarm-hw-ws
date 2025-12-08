@@ -5,10 +5,9 @@ from rclpy.node import Node
 from our_custom_interfaces.msg import ObjectData
 
 def generate_dataset():
-    """ Corrected generator: integers only except confidence """
     samples = []
 
-    # 50 invalid samples
+    # 50 invalid samples at start
     for _ in range(50):
         samples.append({
             "valid": False,
@@ -17,7 +16,7 @@ def generate_dataset():
             "w": 0,
             "h": 0,
             "category": 0,
-            "confidence": 0.0,  # only float allowed
+            "confidence": 0.0,
             "err_x": 0,
             "err_y": 0
         })
@@ -31,13 +30,14 @@ def generate_dataset():
         ("w", 20, 100),
     ]
 
+    # 6 sequences × 30 valid samples
     for field, start, end in sequences:
         for step in range(30):
 
-            # compute interpolated float
+            # linear inclusive interpolation
             v = start + (end - start) * step / 29
 
-            # enforce integer result
+            # convert to int (only confidence remains float)
             v_int = int(round(v))
 
             sample = {
@@ -47,12 +47,11 @@ def generate_dataset():
                 "w": 100,
                 "h": 100,
                 "category": 0,
-                "confidence": 0.0,  # only float
+                "confidence": 0.0,
                 "err_x": 0,
                 "err_y": 0
             }
 
-            # assign integer value
             if field in ["w", "h"]:
                 sample["w"] = v_int
                 sample["h"] = v_int
@@ -61,8 +60,21 @@ def generate_dataset():
 
             samples.append(sample)
 
-    return samples
+    # 30 invalid samples at end
+    for _ in range(30):
+        samples.append({
+            "valid": False,
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "category": 0,
+            "confidence": 0.0,
+            "err_x": 0,
+            "err_y": 0
+        })
 
+    return samples
 
 
 class DetectionGeneratorNode(Node):

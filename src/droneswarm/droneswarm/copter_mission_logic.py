@@ -247,6 +247,7 @@ class AwaitingDetectionSubstate(State):
             time_valid = time.perf_counter() - self.first_valid_time
 
             if self.detect_counter >= setting.MIN_CONSECUTIVE_DETECTIONS and time_valid >= setting.DETECTION_CONFIRMATION_TIME:
+                self.node.get_logger().info("Object detected!")
                 self.parent.transition_to_sub(TrackingDetectionSubstate())
                 return
 
@@ -276,6 +277,7 @@ class TrackingDetectionSubstate(State):
         
         elapsed_since_last_detection = time.perf_counter() - self.node.last_detection_time 
         if elapsed_since_last_detection >= setting.DETECTION_LOST_TIME and self.missed_detect_counter >= setting.MAX_CONSECUTIVE_MISSED_DETECTIONS: 
+            self.node.get_logger().info("Object lost!")
             self.parent.transition_to_sub(AwaitingDetectionSubstate())
             return
 
@@ -293,14 +295,15 @@ class TrackingDetectionSubstate(State):
         # Log normalized errors for debugging
         self.node.get_logger().info(f"Normalized Errors - X: {n_err_x:.3f}, Y: {n_err_y:.3f}, Edge Dist: {n_edge_dist:.3f}")
 
-        vx = self.pid_x.update(n_err_x, setting.COPTER_CONTROL_LOOP_DT)
-        vy = self.pid_y.update(n_err_y, setting.COPTER_CONTROL_LOOP_DT)
-        vz = self.pid_z.update(n_edge_dist, setting.COPTER_CONTROL_LOOP_DT)
+        # Err_y - horizontal pixel error (vy), err_y - vertical pixel error (vz), n_edge_dist - avg edge size (vx)
+        vx = self.pid_x.update(n_edge_dist, setting.COPTER_CONTROL_LOOP_DT)  
+        vy = self.pid_y.update(n_err_x, setting.COPTER_CONTROL_LOOP_DT)
+        vz = self.pid_z.update(n_err_y, setting.COPTER_CONTROL_LOOP_DT)
 
         # log computed velocities for debugging
         self.node.get_logger().info(f"Computed Velocities - VX: {vx:.3f}, VY: {vy:.3f}, VZ: {vz:.3f}")
 
-        # self.node.cmd_velocity((vx, vy, vz), (0.0, 0.0, 0.0))
+        self.node.cmd_velocity((vx, vy, vz), (0.0, 0.0, 0.0))
 
 
     

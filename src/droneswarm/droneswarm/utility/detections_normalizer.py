@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 
 from our_custom_interfaces.msg import ObjectData
 import droneswarm.utility.settings as setting
+import droneswarm.utility.constants as const
 
 def normalize_detection(err_x: float, err_y: float, bbox_w: float, bbox_h: float) -> tuple[float, float, float]:
     """ Returns a normalized detection tuple based on image size and BBOX_EDGE_LENGTH """
