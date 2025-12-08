@@ -252,7 +252,7 @@ class CopterControllerNode(Node):
             self.have_detection = True
             self.last_detection_time = time.perf_counter() # Used for grace period 
 
-            self.filtered_err_x = self.err_x_filter.update(msg.err_x)
+            self.filtered_err_x = self.err_x_filter.update(-msg.err_x)  # Inverting the sign since the controls for controlling the drone is flipped
             self.filtered_err_y = self.err_y_filter.update(msg.err_y)
             self.filtered_bbox_w = self.w_filter.update(msg.w)
             self.filtered_bbox_h = self.h_filter.update(msg.h)
