@@ -16,7 +16,7 @@ BBOX_EDGE_LENGTH = 100  # NOTE: Very important. This value is what control how c
 
 
 # Settings for selecting tests or run programs
-PROGRAM_SELECT = const.HOVER_TEST
+PROGRAM_SELECT = const.RUN_PROGRAM
 
 
 # Filter settings

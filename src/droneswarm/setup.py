@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
             'tcp_camera_bridge_node = droneswarm.tcp_camera_bridge_node:main',
             'copter_controller_node = droneswarm.copter_controller_node:main',
+            'detection_generator_node = droneswarm.detection_generator_node:main',
         ],
     },
 )

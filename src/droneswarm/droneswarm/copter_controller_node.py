@@ -25,11 +25,9 @@ import droneswarm.utility.settings as setting
 
 class CopterControllerNode(Node):
 
-    def __init__(self, fsm: CopterControllerFSM):
+    def __init__(self):
         """ Initialize the copter controller node """
         super().__init__("copter_controller")
-
-        self._controller_fsm = fsm
 
         # --- Create callback timers --- 
         self._copter_controll_loop_timer = self.create_timer(setting.COPTER_CONTROL_LOOP_DT, self._copter_control_loop) 
@@ -72,6 +70,9 @@ class CopterControllerNode(Node):
         self._global_pos_pub = self.create_publisher(GlobalPosition, "/ap/cmd_gps_pose", 1)
         self._vel_pub = self.create_publisher(TwistStamped, "/ap/cmd_vel", 1)
 
+        # --- Mission Logic FSM ---
+        self._controller_fsm = CopterControllerFSM(node = self)
+
         # --- Control flags and variables ---
         # Initializing copter controller flags
         self.prearm_check_in_progress = False
@@ -100,10 +101,10 @@ class CopterControllerNode(Node):
         self._vel_watchdog_counter = 0
 
         # Dectecions error filters
-        err_x_filter = EMAFilter(alpha = setting.ERR_X_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the x-axis.
-        err_y_filter = EMAFilter(alpha = setting.ERR_Y_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the y-axis.
-        w_filter = EMAFilter(alpha = setting.BBOX_W_EMA_APLHA)       # Pixel size of bounding box width edge
-        h_filter = EMAFilter(alpha = setting.BBOX_H_EMA_APLHA)       # Pixel size of bounding box height edge
+        self.err_x_filter = EMAFilter(alpha = setting.ERR_X_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the x-axis.
+        self.err_y_filter = EMAFilter(alpha = setting.ERR_Y_EMA_APLHA)    # Pixel error between the bounding box center and the image center along the y-axis.
+        self.w_filter = EMAFilter(alpha = setting.BBOX_W_EMA_APLHA)       # Pixel size of bounding box width edge
+        self.h_filter = EMAFilter(alpha = setting.BBOX_H_EMA_APLHA)       # Pixel size of bounding box height edge
 
         # Newest detection data from PI OS node - Updated by the _detections_callback()
         self.have_detection = False
@@ -113,7 +114,6 @@ class CopterControllerNode(Node):
         self.filtered_bbox_h = 0.0
         self.last_detection_time = time.perf_counter()
         
-
 
     """ --- Service Methods  --- """
 
@@ -252,10 +252,10 @@ class CopterControllerNode(Node):
             self.have_detection = True
             self.last_detection_time = time.perf_counter() # Used for grace period 
 
-            self.filtered_err_x = err_x_filter(msg.err_x)
-            self.filtered_err_y = err_y_filter(msg.err_y)
-            self.filtered_bbox_w = w_filter(msg.w)
-            self.filtered_bbox_h = h_filter(msg.h)
+            self.filtered_err_x = self.err_x_filter.update(msg.err_x)
+            self.filtered_err_y = self.err_y_filter.update(msg.err_y)
+            self.filtered_bbox_w = self.w_filter.update(msg.w)
+            self.filtered_bbox_h = self.h_filter.update(msg.h)
             
         else:
             self.have_detection = False
@@ -575,7 +575,7 @@ class CopterControllerNode(Node):
         start = time.perf_counter() # Measures relative time compared to .time
 
         try:
-            self._controller_fsm.step(self)
+            self._controller_fsm.step()
 
         except Exception as e:
             self.get_logger().error(f"Copter control loop error: {e}")
@@ -594,8 +594,7 @@ def main(args=None):
     print("Starting copter control loop.")
     rclpy.init(args=args)
     
-    fsm = CopterControllerFSM()
-    node = CopterControllerNode(fsm = fsm)
+    node = CopterControllerNode()
     rclpy.spin(node)
 
     node.destroy_node()
