@@ -163,6 +163,13 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
         - When prompted, select "no" to “Would you like a login shell to be accessible over serial?”
         - When prompted, select "yes" to “Would you like the serial port hardware to be enabled?”.
     - Now, Reboot the Pi.
+1. Setup Pi AI Cam drivers/tcp_publisher on Pi (not within its docker)
+    - SSH into the pi using:
+        - `ssh raspberrypi.local`
+    - Clone the source code:
+        - `git clone https://github.com/alroe19/droneswarm_host_side.git`
+        - `cd droneswarm_host_side`
+        - `sudo ./install_dependencies.sh`
  
 
 ## How to update the Pi when you change the source code?
