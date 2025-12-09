@@ -1,6 +1,6 @@
 # (this base image was used by the ardupilot guide... not sure whhy they dont use the official ros image - that has arm64v8 support as well)
-FROM arm64v8/ros:humble 
-#FROM ros:humble-ros-base
+# FROM arm64v8/ros:humble 
+FROM ros:humble-ros-base
 
 ARG BUILD_MICRO_ROS_AGENT="yes"
 ARG BUILD_OUR_ROS2_WS="yes"
@@ -72,6 +72,7 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 # RUN . /opt/ros/humble/setup.sh && colcon build
 
 
+
 WORKDIR /
 # copy the whole workspace into the container:
 COPY . /our_ros2_ws
@@ -82,7 +83,8 @@ RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
         # install dependencies for our workspace - in they way we normally do for a ROS2 workspace EXCEPT:
             # we we only need build dependencies (we can specify with --dependency-types) - exec dependencies are only needed and installed on the PI itself
         rosdep install -i --from-path src/droneswarm --rosdistro humble -y --dependency-types build && \
-        . /opt/ros/humble/setup.sh && colcon build --packages-up-to droneswarm; \
+        # (--executor sequential in colcon build to decrease risk of build error.)
+        . /opt/ros/humble/setup.sh && colcon build --executor sequential --packages-up-to droneswarm; \ 
     else \
         echo "Skipping our ROS2 workspace"; \
     fi

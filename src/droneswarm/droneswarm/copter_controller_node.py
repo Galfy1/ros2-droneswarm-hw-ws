@@ -520,7 +520,7 @@ class CopterControllerNode(Node):
         if not self.takeoff_in_progress:
             return
 
-        is_takeoff_complete = self.has_reached_goal(alt_tolerance = 0.5)
+        is_takeoff_complete = self.has_reached_goal(alt_tolerance = 0.25)
 
         if is_takeoff_complete:
             self.takeoff_in_progress = False
