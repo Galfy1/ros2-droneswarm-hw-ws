@@ -81,8 +81,8 @@ RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
         rosdep update && \
         # install dependencies for our workspace - in they way we normally do for a ROS2 workspace EXCEPT:
             # we we only need build dependencies (we can specify with --dependency-types) - exec dependencies are only needed and installed on the PI itself
-        rosdep install -i --from-path src --rosdistro humble -y --dependency-types build && \
-        . /opt/ros/humble/setup.sh && colcon build; \
+        rosdep install -i --from-path src/droneswarm --rosdistro humble -y --dependency-types build && \
+        . /opt/ros/humble/setup.sh && colcon build --packages-up-to droneswarm; \
     else \
         echo "Skipping our ROS2 workspace"; \
     fi
