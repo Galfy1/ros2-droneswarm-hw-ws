@@ -207,7 +207,7 @@ For a list of general ROS2 packages, see:
     - (you can check/close the docker engine in the Windows system tray)
     - (if you had docker engine running in Windows before starting WSL, you need to close the docker engine, and then restart WSL using “WSL --shutdown”)
     - (you can check if your WSL is using Windows or Linux Docker Engine by typing “docker info” and looking for the “operating system” line. If it says “: Docker Desktop”, its using the Windows Docker Engine)
-- If you incounter failed "concon build ..." commands, , try increasing the WSL memory in the "WSL Settings" Windows app
+- If you incounter failed "concol build ..." commands, , try increasing the WSL memory in the "WSL Settings" Windows app
  
 # Additional Setup for Gazebo Simulation
 If you need to run an ArduPilot/ROS2/Gazebo simulation, you need the additional setup covered in this section.  
