@@ -51,37 +51,36 @@ ros2_container_name="ros2_droneswarm-ros2-1" # (a name given by docker. cus its 
 # # main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
 
 # Make sure any already existing container named "dummy" is removed before we start.
-docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
+sudo docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)
                             # this will give an "ERROR: default sources list file already exists" error if the container does not exist - we can ignore that error!
 
 # Build with multiplatform support.
-docker build . --platform linux/arm64 -t build_image \
+sudo docker build . --platform linux/arm64 -t build_image \
     --build-arg BUILD_MICRO_ROS_AGENT=$build_micro_ros_agent \
     --build-arg BUILD_OUR_ROS2_WS=$build_application 
 # Create a dummy container from the image
-docker create --name dummy build_image
-
+sudo docker create --name dummy build_image
 # Create a temporary directories to hold the installation files.
-rm -rf temp_our_ws temp_micro_agent  # Remove any existing temp directory to avoid conflicts.
+sudo rm -rf temp_our_ws temp_micro_agent  # Remove any existing temp directory to avoid conflicts.
 mkdir -p temp_our_ws/install temp_micro_agent/install  # Create the temp directory.
 
 # Only copy to target if it was actually built.
 if [ "$build_application" = "yes" ]; then
     # Copy the installation directory from the docker image to the host.
-    docker cp dummy:/our_ros2_ws/install/. temp_our_ws/install 
+    sudo docker cp dummy:/our_ros2_ws/install/. temp_our_ws/install 
     # And now, from host to target's directory, but ignore COLCON_IGNORE.
     rsync -av --mkpath --exclude temp_our_ws/install/COLCON_IGNORE temp_our_ws/install $pi_username@$pi_hostname:$our_ws_target_dir
 fi
 if [ "$build_micro_ros_agent" = "yes" ]; then
-    docker cp dummy:/micro-ROS-Agent/install/. temp_micro_agent/install
+    sudo docker cp dummy:/micro-ROS-Agent/install/. temp_micro_agent/install
     rsync -av --mkpath --exclude temp_micro_agent/install/COLCON_IGNORE temp_micro_agent/install $pi_username@$pi_hostname:$microros_ws_target_dir
 fi
 
-docker rm -f dummy
+sudo docker rm -f dummy
 
 # Clean up the temporary directories.
-rm -rf temp_our_ws
-rm -rf temp_micro_agent
+sudo rm -rf temp_our_ws
+sudo rm -rf temp_micro_agent
 
 # # The paths that the docker volumes are mapped to INSIDE THE DOCKER CONTAINER (defined in docker-compose.yml)
 microros_ws_target_dir_in_docker=/root/ros2_droneswarm/workspaces/microros_ws
