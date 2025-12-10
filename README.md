@@ -177,7 +177,7 @@ Simply run ./build_copy_start_on_pi.sh with your desired yes/no flag options:
  - `build_copy_start_on_pi.sh <build_application> <build_micro_ros_agent> <install_dependencies> <force_rebuild_of_ros2_docker>`
      - _<build_application>_: Build the droneswarm workspace.
      - _<build_micro_ros_agent>_: Build the micro ros agent. You probably only want to set this to "yes" if there are updates to the micro ros agent.
-     - _<install_dependencies>_: Install dependencies on the Pi. You need to set this to "yes" if you add to the dependencies of a ROS2 package.
+     - _<install_dependencies>_: Install dependencies on the Pi. You need to set this to "yes" if you add to the dependencies of a ROS2 package. Dependencies will only be installed in the workspaces that are specified with "yes" in the <build…> flags.
      - _<force_rebuild_of_ros2_docker>_: Force a rebuild of the ros2 Docker Compose/Dockerfile. If the ros2 docker container is already running on the pi, changes to the ros2 dockerfile or docker-compose file will NOT be applied automatically. Therefore, you need to force re-build the docker if you have made changes to the ros2 dockerfile or docker-compose file. If you set force_rebuild_of_ros2_docker to yes, you probably also want to set install_dependencies to yes (since all installed dependencies are removed as the docker compose is brought down and up again).
 
 A Typical command will look like this:
@@ -193,9 +193,8 @@ If you make any changes to the Dockerfile or docker-compose.yml file in the "ros
 To add a dependency:
 - add it to package.xml within the ROS2 package
 
-If you need a Python package that is NOT part of rosdep 
-- (see https://docs.ros.org/en/humble/How-To-Guides/Using-Python-Packages.html for lists of available Python packages in rosdep):
-- add it to requirements.txt
+For a list of Python packages in rosdep, see:
+- https://docs.ros.org/en/humble/How-To-Guides/Using-Python-Packages.html
 
 For a list of general ROS2 packages, see:
 - [ROS Index](https://index.ros.org/?search_packages=true)
@@ -255,7 +254,22 @@ It is assumed that you have followed [Get Started (basic)](#get-started-basic).
     - `ros2 launch {package name} {launch file name}`
   
 
-# Miscellaneous Notes
+# Known Issues Regarding Pi Setup
+This section outlines known issues related to the scripts in this repo that are used to set up, cross-compile, copy files, etc. to the Pi.
+
+## Redundant Micro-ROS Agent
+The scripts create and use a Micro-ROS agent in its own workspace on the Pi. However, we also have a Micro-ROS agent package in our droneswarm workspace that is not being used. Using the Micro-ROS agent within the droneswarm workspace instead could simplify the setup, dependency installation, and related processes.
+
+## Behavior of <force_rebuild_of_ros2_docker> and Dependencies
+Using <force_rebuild_of_ros2_docker> will remove all dependencies installed in the Docker container running on the Pi, requiring them to be reinstalled.
+
+## Regarding the "autostart files" Using systemd
+These files are not fully tested.
+
+## Issues related to automatic installation of depencencies
+The <install_dependencies> functionality of /build_copy_start_on_pi.sh does not seem to fully work
+
+# Troubleshooting tips
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
 - If you get "exec /bin/sh: exec format error" while running the "cross compile" bash script, you Qemu might be broken - try installing it again using the command mentioned earlier in this readme file
 
