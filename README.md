@@ -43,6 +43,8 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
     - `ros2 launch {package name} {launch file name}`
 
 # Get Started (for use on Raspberry Pi)
+1. Clone repo:
+    - `git clone --recursive https://github.com/Galfy1/ros2-droneswarm-hw-ws.git`
 1. Install Linux on the SD card using “Raspberry Pi Imager”
     - Raspberry Pi Imager can be found: https://www.raspberrypi.com/software/ 
     - Select “Raspberry Pi Zero 2W”
@@ -123,7 +125,7 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
               sudo docker exec $ros2_container_name bash -c "
                 cd $microros_ws_target_dir_in_docker &&
                 source install/setup.bash &&
-                ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyS0 "
+                ros2 run micro_ros_agent micro_ros_agent serial -v4 -b 115200 -D /dev/ttyAMA0 "
               ```
         - `nano ~/.local/lib/start-our-ws.sh`
             - ```
@@ -182,6 +184,8 @@ Simply run ./build_copy_start_on_pi.sh with your desired yes/no flag options:
 
 A Typical command will look like this:
 - `./build_copy_start_on_pi.sh yes no no no`
+
+_Note: don't use `sudo` in front of `build_copy_start_on_pi.sh`! (doing so will cause directories created on the Pi to become root-owned, which can lead to permission issues)._
 
 If you make any changes to the Dockerfile or docker-compose.yml file in the "ros2_in_docker_for_pi" folder, you need to:
 - Run the copy_ros2_os_to_pi.sh script.
@@ -261,17 +265,19 @@ This section outlines known issues related to the scripts in this repo that are 
 The scripts create and use a Micro-ROS agent in its own workspace on the Pi. However, we also have a Micro-ROS agent package in our droneswarm workspace that is not being used. Using the Micro-ROS agent within the droneswarm workspace instead could simplify the setup, dependency installation, and related processes.
 
 ## Behavior of <force_rebuild_of_ros2_docker> and Dependencies
-Using <force_rebuild_of_ros2_docker> will remove all dependencies installed in the Docker container running on the Pi, requiring them to be reinstalled.
+Using `<force_rebuild_of_ros2_docker>` will remove all dependencies installed in the Docker container running on the Pi, requiring them to be reinstalled.
 
 ## Regarding the "autostart files" Using systemd
 These files are not fully tested.
 
-## Issues related to automatic installation of depencencies
-The <install_dependencies> functionality of /build_copy_start_on_pi.sh does not seem to fully work
+## Issues Related to Automatic Installation of Dependencies
+The `<install_dependencies>` functionality in `build_copy_start_on_pi.sh` does not fully work.
 
 # Troubleshooting tips
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
-- If you get "exec /bin/sh: exec format error" while running the "cross compile" bash script, you Qemu might be broken - try installing it again using the command mentioned earlier in this readme file
+- If you get "exec /bin/sh: exec format error" while running  `build_copy_start_on_pi.sh`, you QEMU is proabably broken - try installing it again using the command mentioned earlier in this readme file.
+- If you encounter weird build errors when using `build_copy_start_on_pi.sh`, your system may not have enough resources. Try building `<build_application>` and `<build_micro_ros_agent>` separately instead of running both at the same time.
+
 
 
 
