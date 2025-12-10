@@ -106,8 +106,7 @@ ssh $pi_username@$pi_hostname << EOF   # (no quotes around EOF to allow variable
             rosdep update &&
             if [ "$build_micro_ros_agent" = "yes" ]; then
                 cd $microros_ws_target_dir_in_docker &&
-                rosdep install --from-paths install --dependency-types exec &&
-                apt install -y ros-humble-micro-ros-msgs
+                rosdep install --from-paths install --dependency-types exec
             fi
             if [ "$build_application" = "yes" ]; then
                 cd $our_ws_target_dir_in_docker &&
