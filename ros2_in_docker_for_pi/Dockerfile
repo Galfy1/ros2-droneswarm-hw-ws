@@ -22,7 +22,7 @@ FROM ros:humble-ros-core
 
 # Regarding the "python3-rosdep" package:
     # rosdep is not part of ros-core, se we install it manually
-RUN apt update && apt install -y python3-rosdep
+RUN apt update && apt install -y python3-rosdep nano
 
 RUN rosdep init
 
