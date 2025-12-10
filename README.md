@@ -156,16 +156,25 @@ ROS2 workspace made for a Ardupilot + Raspberry Pi setup. The Pi is running ROS2
           ```
     - Because systemctl user services won’t start until someone logs in, enable linger for login:
         - `loginctl enable-linger $USER`
-1. Make sure serial port is enabled:
+1. Setup UART:
    - SSH into the pi using:
         - `ssh devboard@raspberrypi.local`
-    - Open config tool (works in headless also):
-        - `sudo raspi-config`
-    - in the utility, select "Interfacing Options" --> "Serial":
-        - When prompted, select "no" to “Would you like a login shell to be accessible over serial?”
-        - When prompted, select "yes" to “Would you like the serial port hardware to be enabled?”.
+   - Enable UART: 
+        - Open config tool (works in headless also):
+            - `sudo raspi-config`
+        - in the utility, select "Interfacing Options" --> "Serial":
+            - When prompted, select "no" to “Would you like a login shell to be accessible over serial?”
+            - When prompted, select "yes" to “Would you like the serial port hardware to be enabled?”.
+   - Disable Bluetooth (so that the UART0 can use the primary UART hardware - i.e. /dev/ttyAMA0)
+        - Open a terminal in the Pi Docker:
+            - `sudo docker exec "ros2_droneswarm-ros2-1 bash`
+        - Open config file:
+            - `sudo nano /boot/firmware/config.txt`
+        - Add the following line:
+            - `dtoverlay=disable-bt`
+        - Save and close the file
     - Now, Reboot the Pi.
-1. Setup Pi AI Cam drivers/tcp_publisher on Pi (not within its docker)
+1. Setup Pi AI Cam drivers/tcp_publisher on Pi (outside of its docker)
     - SSH into the pi using:
         - `ssh devboard@raspberrypi.local`
     - Clone the source code:
