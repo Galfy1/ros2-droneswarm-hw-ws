@@ -286,6 +286,7 @@ The `<install_dependencies>` functionality in `build_copy_start_on_pi.sh` does n
 - If you get "credential" issues while running the bash scripts, try running them with sudo. If that does not work: in ~/.docker/config.json change credsStore to credStore.
 - If you get "exec /bin/sh: exec format error" while running  `build_copy_start_on_pi.sh`, you QEMU is proabably broken - try installing it again using the command mentioned earlier in this readme file.
 - If you encounter weird build errors when using `build_copy_start_on_pi.sh`, your system may not have enough resources. Try building `<build_application>` and `<build_micro_ros_agent>` separately instead of running both at the same time.
+- If you get a "cannot open shared object file" error while starting the micro ros agent, you haven’t correctly installed the micro-ROS agent dependencies.
 
 
 
