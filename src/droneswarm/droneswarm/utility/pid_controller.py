@@ -28,7 +28,7 @@ class PID():
         else:
             derivative = (error - self.prev_error) / dt
 
-        if self.kd != 0.0:
+        if self.ki != 0.0:
 
             # Proposed integral
             proposed_integral = self.integral + error * dt
