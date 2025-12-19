@@ -32,7 +32,7 @@ class CopterControllerNode(Node):
         # --- Create callback timers --- 
         self._copter_controll_loop_timer = self.create_timer(setting.COPTER_CONTROL_LOOP_DT, self._copter_control_loop) 
         self._prearm_check_timer = self.create_timer(setting.PREARM_LOOP_DT, self._prearm_check) 
-        self._vel_stream_loop_timer = None  # Created in the _ap_status_callback() method. 
+        self._vel_stream_loop_timer = None  
 
         # --- Services ---
         self._client_prearm = self.create_client(Trigger, "/ap/prearm_check")
