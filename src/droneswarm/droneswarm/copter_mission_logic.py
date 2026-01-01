@@ -292,6 +292,9 @@ class TrackingDetectionSubstate(State):
             self.node.filtered_bbox_h
         )
 
+        if self.node.have_detection == False:
+            n_edge_dist = 0.0
+
         # Log normalized errors for debugging
         self.node.get_logger().info(f"Normalized Errors - X: {n_err_x:.3f}, Y: {n_err_y:.3f}, Edge Dist: {n_edge_dist:.3f}")
 
