@@ -12,33 +12,6 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
     apt-get update && apt-get -y --no-install-recommends install git cmake build-essential
 
-# # Mount and update apt lists
-# RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
-#     sudo apt-get update
-
-# # Mount and update apt cache (optional, but keeps caching separate)
-# RUN --mount=target=/var/cache/apt,type=cache,sharing=locked \
-#     sudo apt-get upgrade -y
-
-# # Install build tools
-# RUN apt-get install -y --no-install-recommends git cmake build-essential
-
-
-
-# WORKDIR /
-# RUN git clone --depth 1 --branch humble https://github.com/micro-ROS/micro-ROS-Agent.git
-# WORKDIR /micro-ROS-Agent
-# RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \                   
-#     --mount=target=/var/cache/apt,type=cache,sharing=locked \
-#     apt-get update && \
-#     rosdep update && \
-#     # install dependencies for micro-ROS-Agent:
-#     rosdep install --from-paths . --ignore-src -y --dependency-types build && \     
-#     # install fastcdr needed for micro-ROS-Agent:
-#     apt-get -y --no-install-recommends install ros-humble-fastcdr                   
-#  # source underlay and build micro-ROS-Agent
-# RUN . /opt/ros/humble/setup.sh && colcon build     
-
 
 # Note: for commands within RUN, we need \ for each line (except the last), else docker will think its the end of RUN
 
@@ -61,18 +34,6 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     fi
 
 
-#  # copy the whole workspace into the container:
-# COPY . /our_ros2_ws  
-# WORKDIR /our_ros2_ws 
-# # (we dont need to --mount cache stuff here, because we dont use apt-get inside this RUN command)
-# RUN rosdep update && \     
-#     # install dependencies for our workspace (in they way we normally do for a ROS2 workspace):
-#     # (https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html#resolve-dependencies)
-#     rosdep install -i --from-path src --rosdistro humble -y
-# RUN . /opt/ros/humble/setup.sh && colcon build
-
-
-
 WORKDIR /
 # copy the whole workspace into the container:
 COPY . /our_ros2_ws
@@ -88,9 +49,5 @@ RUN if [ "$BUILD_OUR_ROS2_WS" = "yes" ]; then \
     else \
         echo "Skipping our ROS2 workspace"; \
     fi
-# # DEBUGGING:
-# RUN rosdep update
-# RUN rosdep install -i --from-path src --rosdistro humble -y --dependency-types build
-# RUN . /opt/ros/humble/setup.sh && colcon build
-# # END DEBUGGING
+
 

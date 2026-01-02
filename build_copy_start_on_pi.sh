@@ -8,10 +8,6 @@
 set -e  # Stop the script if any command fails 
 
 # Check for required arguments
-# if [ -z "$1" ]; then
-#     echo "Error in first arg: Missing required argument <pi_hostname> (e.g. raspberrypi.local)"
-#     exit 1
-# fi
 if [[ -z "$1" || ( "$1" != "yes" && "$1" != "no" ) ]]; then
     echo "Error in second arg: Missing argument or invalid value. <build_application> (values: yes or no)"
     exit 1
@@ -47,8 +43,8 @@ ros2_container_base_dir="~/ros2_droneswarm"
 our_ws_target_dir="$ros2_container_base_dir/workspaces/our_ws"
 microros_ws_target_dir="$ros2_container_base_dir/workspaces/microros_ws"
 ros2_container_name="ros2_droneswarm-ros2-1" # (a name given by docker. cus its in the ros2_droneswarm folder and is called ros2 in the compose file. the "1" is cus its the first container of that name in the compose)
-# # main_ros2_package_name="droneswarm"
-# # main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
+# main_ros2_package_name="droneswarm"
+# main_ros2_launchfile="tsunami_swarm.launch.py"  # our main "application" launch file to run inside the container
 
 # Make sure any already existing container named "dummy" is removed before we start.
 sudo docker rm -f dummy || true  # "|| true" will ignore error if dummy does not exist (remember, we are usings "set -e" at the top of the script)

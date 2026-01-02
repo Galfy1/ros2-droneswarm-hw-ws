@@ -15,19 +15,7 @@ FROM ros:humble-ros-core
 # you can use ENTRYPOINT to set a command that will always be executed when the container starts, regardless of any command line arguments passed to docker run.
 # you can have both ENTRYPOINT and CMD in the same Dockerfile. then, CMD will provide additional arguments to the ENTRYPOINT command (i.e. the CMD arguments can still be overwritten if params are provided when docker run).
 
-# rosdep is not part of ros-core, se we install it manually
-#RUN apt-get update && apt-get install -y python3-rosdep
-#RUN rosdep init
-
-
 # Regarding the "python3-rosdep" package:
     # rosdep is not part of ros-core, se we install it manually
 RUN apt update && apt install -y python3-rosdep nano
-
 RUN rosdep init
-
-# TODO: overvej at rosdep init herinde (tror det kræver underlay source men ikke sikker)
-
-
-# BRUG RUN TIL AT KØRE TING DER SKAL KØRE UNDER BYGNINGEN AF CONTAINEREN
-# BRUG CMD TIL AT KØRE TING DER SKAL KØRE NÅR CONTAINEREN STARTER
