@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 class EMAFilter:
     def __init__(self, alpha=0.15):

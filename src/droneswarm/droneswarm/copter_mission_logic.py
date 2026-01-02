@@ -369,23 +369,3 @@ class CopterControllerFSM:
     
     def step(self): 
         self._current_state.run()
-
-
-
-
-#             #     self.cmd_navigate_to(
-#             #         lat = GRAYHOUND_TRACK.latitude, 
-#             #         lon = GRAYHOUND_TRACK.longitude, 
-#             #         alt_osd = 20.0)
-
-#             #     if self.has_reached_goal():
-#             #         self.state = STATE3
-
-#             # elif self.state == STATE3:
-#             #     if not self._mode_switch_in_progress and self._current_ap_status_mode != COPTER_MODE_RTL:
-#             #         self._switch_mode_request(COPTER_MODE_RTL)
-#             #         return
-#             #     elif self._mode_switch_in_progress:
-#             #         return
-            
-                

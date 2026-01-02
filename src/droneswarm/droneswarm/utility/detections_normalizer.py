@@ -15,6 +15,5 @@ def normalize_detection(err_x: float, err_y: float, bbox_w: float, bbox_h: float
 
     # normalise bounding box to a desired average edge length. If n_edge_dist is > 0 then then UAV is to far. If < 0 then its too close.  
     n_edge_dist = (setting.BBOX_EDGE_LENGTH - avg_edge_size) / setting.BBOX_EDGE_LENGTH
-    # n_edge_dist = max(-2.0, min(2.0, n_edge_dist))
 
     return (n_err_x, n_err_y, n_edge_dist)

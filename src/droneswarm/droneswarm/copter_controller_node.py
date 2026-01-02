@@ -227,11 +227,7 @@ class CopterControllerNode(Node):
             self.get_logger().warn("Takeoff request failed.")
             self.takeoff_in_progress = False
             return
-
-        # If request succeeded, leave takeoff_in_progress = True
-        # until FC reports that we are flying.
-        # TODO: add later
-
+            
 
     """ --- Topic callbacks --- """
 
