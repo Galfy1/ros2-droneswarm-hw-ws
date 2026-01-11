@@ -7,7 +7,7 @@ services:
     volumes:
       - ./workspaces:/root/ros2_droneswarm/workspaces # mount the directory where the build ros2 workspaces are stored  NOT SURE THIS IS NEEDED WHEN WE HAVE THE ABOVE
     devices:
-      - "/dev/ttyS0"
+      - "/dev/ttyAMA0"
     restart: always # always restart the container if it stops (i.e. also on reboot) (in this "restart", state is remebered)
     network_mode: host
     command: tail -f /dev/null # keeps docker container running without doing anything. (else it would exit immediately cus there are running no task to do)
